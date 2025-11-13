@@ -1,0 +1,460 @@
+{
+  "info": {
+    "name": "Voice Assistant API",
+    "description": "Complete API collection for Voice Assistant Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "voice-assistant-api",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "callId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Calls",
+      "item": [
+        {
+          "name": "List Calls",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/calls?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "calls"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2024-11-01",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Call Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/calls/{{callId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "calls", "{{callId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Call Metadata",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Patient follow-up completed successfully\",\n  \"tags\": [\"follow-up\", \"resolved\"],\n  \"isConfidential\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/calls/{{callId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "calls", "{{callId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Transcriptions",
+      "item": [
+        {
+          "name": "List Transcriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/transcriptions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "transcriptions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": "medication",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Metrics",
+      "item": [
+        {
+          "name": "Get Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "metrics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Billing",
+      "item": [
+        {
+          "name": "Create Billing Charge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"callId\": \"{{callId}}\",\n  \"amount\": 0.055,\n  \"type\": \"call\",\n  \"description\": \"Call charge for 5.5 minutes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/billing/charge",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "billing", "charge"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transcription",
+      "item": [
+        {
+          "name": "Upload Audio (Sync)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": "/path/to/audio.mp3"
+                },
+                {
+                  "key": "mode",
+                  "value": "sync",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contact/transcribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contact", "transcribe"]
+            }
+          }
+        },
+        {
+          "name": "Upload Audio (Async)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": "/path/to/audio.mp3"
+                },
+                {
+                  "key": "mode",
+                  "value": "async",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contact/transcribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contact", "transcribe"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks (Testing)",
+      "item": [
+        {
+          "name": "Incoming Call",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Bland-Signature",
+                "value": "mock-signature-for-testing"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"incoming_call\",\n  \"data\": {\n    \"call_id\": \"test-call-{{$timestamp}}\",\n    \"from\": \"+1234567890\",\n    \"to\": \"+0987654321\",\n    \"metadata\": {\n      \"patient_name\": \"John Doe\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/bland/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "bland", "events"]
+            }
+          }
+        },
+        {
+          "name": "Call Connected",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Bland-Signature",
+                "value": "mock-signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"call_connected\",\n  \"data\": {\n    \"call_id\": \"test-call-123\",\n    \"connected_at\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/bland/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "bland", "events"]
+            }
+          }
+        },
+        {
+          "name": "Transcription Completed",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Bland-Signature",
+                "value": "mock-signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"transcription_completed\",\n  \"data\": {\n    \"call_id\": \"test-call-123\",\n    \"transcript\": \"This is the full transcription of the medical call.\",\n    \"language\": \"en\",\n    \"confidence\": 0.95,\n    \"duration\": 300,\n    \"chunks\": [\n      {\n        \"start\": 0,\n        \"end\": 5.2,\n        \"text\": \"Hello, how can I help you?\",\n        \"speaker\": \"doctor\"\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/bland/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "bland", "events"]
+            }
+          }
+        },
+        {
+          "name": "Call Disconnected",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Bland-Signature",
+                "value": "mock-signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"call_disconnected\",\n  \"data\": {\n    \"call_id\": \"test-call-123\",\n    \"disconnected_at\": \"{{$isoTimestamp}}\",\n    \"recording_url\": \"https://recordings.example.com/test-call-123.mp3\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/bland/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "bland", "events"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
