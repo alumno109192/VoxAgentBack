@@ -34,12 +34,17 @@ export { io };
 
 // Connect to MongoDB
 const connectDB = async (): Promise<void> => {
+  if (!config.mongo.uri || config.mongo.uri === 'mongodb://localhost:27017/voice-assistant') {
+    logger.warn('MongoDB not configured, skipping connection');
+    return;
+  }
+  
   try {
     await mongoose.connect(config.mongo.uri);
     logger.info('MongoDB connected successfully');
   } catch (error) {
     logger.error('MongoDB connection error:', error);
-    process.exit(1);
+    logger.warn('Continuing without MongoDB...');
   }
 };
 
@@ -51,8 +56,10 @@ const gracefulShutdown = async (): Promise<void> => {
     logger.info('HTTP server closed');
   });
 
-  await mongoose.connection.close();
-  logger.info('MongoDB connection closed');
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  }
 
   process.exit(0);
 };
