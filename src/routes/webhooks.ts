@@ -6,6 +6,8 @@ import logger from '../utils/logger';
 import { verifyHmacSignature } from '../utils/encryption';
 import { io } from '../server';
 import storageService from '../services/storageService';
+import { devEmulatorAuth } from '../middleware/emulatorAuth';
+import * as billingController from '../controllers/billingController';
 
 const router = Router();
 
@@ -294,5 +296,43 @@ async function handleCallError(data: any) {
     logger.error('Error handling call error:', error);
   }
 }
+
+/**
+ * @swagger
+ * /api/webhooks/stripe-emulator:
+ *   post:
+ *     summary: Emulated Stripe webhook for testing payment flows
+ *     tags: [Webhooks]
+ *     security:
+ *       - EmulatorKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [payment_intent.succeeded, payment_intent.failed]
+ *               data:
+ *                 type: object
+ *                 properties:
+ *                   object:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       amount:
+ *                         type: number
+ *                       currency:
+ *                         type: string
+ *                       metadata:
+ *                         type: object
+ *     responses:
+ *       200:
+ *         description: Event processed
+ */
+router.post('/stripe-emulator', devEmulatorAuth, billingController.handleEmulatedWebhook);
 
 export default router;

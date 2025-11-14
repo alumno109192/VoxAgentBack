@@ -14,6 +14,7 @@ import authRoutes from './routes/auth';
 import webhookRoutes from './routes/webhooks';
 import adminRoutes from './routes/admin';
 import contactRoutes from './routes/contact';
+import billingRoutes from './routes/billing';
 
 const app: Application = express();
 
@@ -62,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Swagger documentation
 if (config.env !== 'production') {

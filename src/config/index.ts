@@ -69,6 +69,11 @@ interface Config {
     enableStripe: boolean;
     enableSendgrid: boolean;
     enableWhisperFallback: boolean;
+    allowPaymentEmulation: boolean;
+  };
+  emulator: {
+    key: string;
+    paymentsJsonPath: string;
   };
   retention: {
     callRecordingDays: number;
@@ -163,6 +168,12 @@ const config: Config = {
     enableStripe: process.env.ENABLE_STRIPE === 'true',
     enableSendgrid: process.env.ENABLE_SENDGRID === 'true',
     enableWhisperFallback: process.env.ENABLE_WHISPER_FALLBACK === 'true',
+    allowPaymentEmulation: process.env.ALLOW_PAYMENT_EMULATION === 'true',
+  },
+
+  emulator: {
+    key: process.env.EMULATOR_KEY || 'dev-emulator-key-change-in-prod',
+    paymentsJsonPath: process.env.PAYMENTS_JSON_PATH || './data/payments',
   },
 
   retention: {

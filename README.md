@@ -151,6 +151,7 @@ curl -X POST http://localhost:4000/api/auth/login \
 
 - `GET /health` - Health check
 - `POST /webhooks/bland/events` - Webhook de Bland Voice
+- `POST /webhooks/stripe-emulator` - Webhook emulado de Stripe (modo dev)
 
 ### Autenticación
 
@@ -166,6 +167,12 @@ curl -X POST http://localhost:4000/api/auth/login \
 - `GET /api/admin/transcriptions` - Buscar transcripciones
 - `GET /api/admin/metrics` - Métricas de uso
 - `POST /api/admin/billing/charge` - Crear cargo
+
+### Billing (requiere auth)
+
+- `POST /api/billing/create-session` - Crear sesión de pago (real o emulada)
+- `GET /api/billing/payments` - Listar pagos (paginado)
+- `GET /api/billing/payments/latest` - Obtener último pago
 
 ### Transcripción
 
@@ -330,6 +337,182 @@ Configurar `SENTRY_DSN` en `.env` para tracking de errores.
 - [ ] Plan de incident response
 - [ ] Revisiones de seguridad trimestrales
 
+## 💳 Emulación de Pagos (Modo Test)
+
+El backend soporta emulación de pasarela de pagos para **testing sin necesidad de claves reales de Stripe**. Esto permite al frontend probar flujos de pago completos sin cargos reales.
+
+### Configuración
+
+```env
+# Habilitar emulación
+ALLOW_PAYMENT_EMULATION=true
+
+# Clave secreta para el emulador (cambiar en producción)
+EMULATOR_KEY=dev-emulator-key-123
+
+# Directorio para persistir pagos emulados
+PAYMENTS_JSON_PATH=./data/payments
+```
+
+### 1. Crear Sesión de Pago Emulada
+
+```bash
+curl -X POST http://localhost:4000/api/billing/create-session \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "tenantId": "tenant-123",
+    "amount": 100,
+    "currency": "USD",
+    "description": "Pago de prueba",
+    "testMode": true
+  }'
+```
+
+**Respuesta:**
+
+```json
+{
+  "success": true,
+  "testMode": true,
+  "checkout_url_emulado": "voice-assistant://emulated-checkout/emu_session_abc123",
+  "sessionIdEmu": "emu_session_abc123",
+  "client_secret_emulado": "emu_secret_xyz789",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
+### 2. Simular Pago Exitoso
+
+Desde tu frontend o con curl, simula el webhook de Stripe:
+
+```bash
+curl -X POST http://localhost:4000/api/webhooks/stripe-emulator \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.succeeded",
+    "data": {
+      "object": {
+        "id": "pi_emulated_123456",
+        "amount": 10000,
+        "currency": "usd",
+        "description": "Pago emulado",
+        "metadata": {
+          "tenantId": "tenant-123",
+          "sessionIdEmu": "emu_session_abc123"
+        }
+      }
+    }
+  }'
+```
+
+**Respuesta:**
+
+```json
+{
+  "received": true,
+  "status": "succeeded",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
+### 3. Simular Pago Fallido
+
+```bash
+curl -X POST http://localhost:4000/api/webhooks/stripe-emulator \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.failed",
+    "data": {
+      "object": {
+        "id": "pi_failed_123456",
+        "amount": 5000,
+        "currency": "usd",
+        "last_payment_error": {
+          "message": "Insufficient funds"
+        },
+        "metadata": {
+          "tenantId": "tenant-123"
+        }
+      }
+    }
+  }'
+```
+
+### 4. Consultar Pagos
+
+```bash
+# Listar pagos de un tenant (paginado)
+curl -X GET "http://localhost:4000/api/billing/payments?tenantId=tenant-123&page=1&limit=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Obtener último pago
+curl -X GET http://localhost:4000/api/billing/payments/latest \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Características del Emulador
+
+- ✅ **Idempotencia**: Múltiples webhooks con el mismo `providerPaymentId` solo crean un registro
+- ✅ **Concurrencia**: Escrituras atómicas con mutex en memoria (single-instance)
+- ✅ **Persistencia**: Registros JSON por día (`payments-YYYY-MM-DD.json`)
+- ✅ **Real-time**: Emite eventos Socket.IO (`payment.succeeded`, `payment.failed`)
+- ✅ **Testing**: Tests de integración con 10 requests concurrentes
+
+### Modo Producción
+
+Para usar **Stripe real** en producción:
+
+1. Configurar claves reales:
+
+```env
+STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key
+ENABLE_STRIPE=true
+```
+
+2. Crear sesión sin `testMode`:
+
+```bash
+curl -X POST http://localhost:4000/api/billing/create-session \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "tenantId": "tenant-123",
+    "amount": 100,
+    "currency": "USD",
+    "description": "Pago real",
+    "testMode": false
+  }'
+```
+
+**Respuesta:**
+
+```json
+{
+  "success": true,
+  "testMode": false,
+  "checkout_url": "https://checkout.stripe.com/pay/cs_live_abc123...",
+  "sessionId": "cs_live_abc123...",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
+3. Configurar webhook real en Stripe Dashboard apuntando a:
+   ```
+   https://your-domain.com/api/webhooks/stripe
+   ```
+
+### Seguridad
+
+- 🔐 El emulador **solo funciona** si `ALLOW_PAYMENT_EMULATION=true`
+- 🔐 Requiere header `X-Emulator-Key` que coincida con `EMULATOR_KEY`
+- 🔐 En producción, **deshabilitar emulación** (`ALLOW_PAYMENT_EMULATION=false`)
+- 🔐 Cambiar `EMULATOR_KEY` a un valor secreto fuerte
+
 ## 📚 Ejemplos de Uso
 
 Ver carpeta `/examples` para:
@@ -337,6 +520,7 @@ Ver carpeta `/examples` para:
 - ✅ Scripts curl
 - ✅ Ejemplos de integración cliente
 - ✅ Webhooks de test
+- ✅ Flujos de pago emulado
 
 ## 🤝 Contribuir
 

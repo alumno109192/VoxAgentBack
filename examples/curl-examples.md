@@ -246,6 +246,213 @@ curl -X POST "${API_URL}/api/admin/billing/charge" \
   }'
 ```
 
+## 11. Pagos Emulados (Modo Test)
+
+### Crear Sesión de Pago Emulada
+
+```bash
+curl -X POST "${API_URL}/api/billing/create-session" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "TENANT_ID_HERE",
+    "amount": 100,
+    "currency": "USD",
+    "description": "Test payment",
+    "testMode": true
+  }'
+```
+
+Respuesta:
+```json
+{
+  "success": true,
+  "testMode": true,
+  "checkout_url_emulado": "voice-assistant://emulated-checkout/emu_session_abc123",
+  "sessionIdEmu": "emu_session_abc123",
+  "client_secret_emulado": "emu_secret_xyz789",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
+### Simular Pago Exitoso (Webhook Emulado)
+
+```bash
+curl -X POST "${API_URL}/api/webhooks/stripe-emulator" \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.succeeded",
+    "data": {
+      "object": {
+        "id": "pi_emulated_123456",
+        "amount": 10000,
+        "currency": "usd",
+        "description": "Pago emulado exitoso",
+        "metadata": {
+          "tenantId": "TENANT_ID_HERE",
+          "sessionIdEmu": "emu_session_abc123"
+        }
+      }
+    }
+  }'
+```
+
+Respuesta:
+```json
+{
+  "received": true,
+  "status": "succeeded",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
+### Simular Pago Fallido
+
+```bash
+curl -X POST "${API_URL}/api/webhooks/stripe-emulator" \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.failed",
+    "data": {
+      "object": {
+        "id": "pi_failed_789012",
+        "amount": 5000,
+        "currency": "usd",
+        "description": "Pago fallido",
+        "last_payment_error": {
+          "message": "Insufficient funds"
+        },
+        "metadata": {
+          "tenantId": "TENANT_ID_HERE"
+        }
+      }
+    }
+  }'
+```
+
+### Listar Pagos
+
+```bash
+curl -X GET "${API_URL}/api/billing/payments?tenantId=TENANT_ID_HERE&page=1&limit=20" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json"
+```
+
+### Obtener Último Pago
+
+```bash
+curl -X GET "${API_URL}/api/billing/payments/latest" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json"
+```
+
+### Test de Idempotencia (mismo providerPaymentId)
+
+```bash
+# Primera solicitud
+curl -X POST "${API_URL}/api/webhooks/stripe-emulator" \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.succeeded",
+    "data": {
+      "object": {
+        "id": "pi_idempotent_test_001",
+        "amount": 2500,
+        "currency": "usd",
+        "metadata": {
+          "tenantId": "TENANT_ID_HERE"
+        }
+      }
+    }
+  }'
+
+# Segunda solicitud (mismo id) - debe ser idempotente
+curl -X POST "${API_URL}/api/webhooks/stripe-emulator" \
+  -H "Content-Type: application/json" \
+  -H "X-Emulator-Key: dev-emulator-key-123" \
+  -d '{
+    "type": "payment_intent.succeeded",
+    "data": {
+      "object": {
+        "id": "pi_idempotent_test_001",
+        "amount": 2500,
+        "currency": "usd",
+        "metadata": {
+          "tenantId": "TENANT_ID_HERE"
+        }
+      }
+    }
+  }'
+```
+
+Respuesta de segunda solicitud:
+```json
+{
+  "received": true,
+  "message": "Event already processed (idempotent)"
+}
+```
+
+### Test de Concurrencia (bash script)
+
+```bash
+#!/bin/bash
+
+# Script para probar concurrencia con el mismo providerPaymentId
+PROVIDER_ID="pi_concurrent_$(date +%s)"
+
+for i in {1..10}; do
+  curl -X POST "${API_URL}/api/webhooks/stripe-emulator" \
+    -H "Content-Type: application/json" \
+    -H "X-Emulator-Key: dev-emulator-key-123" \
+    -d "{
+      \"type\": \"payment_intent.succeeded\",
+      \"data\": {
+        \"object\": {
+          \"id\": \"${PROVIDER_ID}\",
+          \"amount\": 7500,
+          \"currency\": \"usd\",
+          \"metadata\": {
+            \"tenantId\": \"TENANT_ID_HERE\"
+          }
+        }
+      }
+    }" &
+done
+
+wait
+echo "Concurrent test completed"
+```
+
+### Crear Sesión de Pago Real (Stripe)
+
+```bash
+curl -X POST "${API_URL}/api/billing/create-session" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "TENANT_ID_HERE",
+    "amount": 100,
+    "currency": "USD",
+    "description": "Real Stripe payment",
+    "testMode": false
+  }'
+```
+
+Respuesta:
+```json
+{
+  "success": true,
+  "testMode": false,
+  "checkout_url": "https://checkout.stripe.com/pay/cs_live_...",
+  "sessionId": "cs_live_abc123...",
+  "billingRecordId": "65f1a2b3c4d5e6f7g8h9i0j1"
+}
+```
+
 ## Testing con jq (formato JSON)
 
 Para mejor visualización de respuestas:
