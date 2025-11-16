@@ -155,11 +155,31 @@ curl -X POST http://localhost:4000/api/auth/login \
 
 ### Autenticación
 
-- `POST /api/auth/login` - Login
-- `POST /api/auth/refresh` - Refresh token
-- `POST /api/auth/logout` - Logout
+- `POST /auth/login` - Login (devuelve JWT)
+- `POST /auth/refresh` - Refresh token
+- `POST /auth/logout` - Logout
 
-### Admin (requiere auth)
+### Panel Interno del Cliente (requiere JWT)
+
+**Llamadas:**
+- `GET /calls?tenantId=` - Lista de llamadas con filtros
+- `GET /calls/:id` - Detalle completo de llamada con transcripción
+
+**Transcripciones:**
+- `GET /transcriptions?tenantId=` - Lista con búsqueda full-text
+- `GET /transcriptions/:id` - Detalle de transcripción
+
+**Pagos:**
+- `POST /billing/create-session` - Crear sesión (modo test/prod)
+- `GET /billing/payments?tenantId=` - Historial de pagos
+- `GET /billing/payments/latest` - Último pago
+
+**Tenant (configuración):**
+- `GET /tenant/:id` - Datos del cliente (idioma, voz, quotas)
+- `POST /tenant/:id/regenerate-key` - Nueva API key
+- `PATCH /tenant/:id` - Actualizar configuración
+
+### Admin (legacy, requiere auth)
 
 - `GET /api/admin/calls` - Listar llamadas
 - `GET /api/admin/calls/:id` - Detalle de llamada
@@ -167,12 +187,6 @@ curl -X POST http://localhost:4000/api/auth/login \
 - `GET /api/admin/transcriptions` - Buscar transcripciones
 - `GET /api/admin/metrics` - Métricas de uso
 - `POST /api/admin/billing/charge` - Crear cargo
-
-### Billing (requiere auth)
-
-- `POST /api/billing/create-session` - Crear sesión de pago (real o emulada)
-- `GET /api/billing/payments` - Listar pagos (paginado)
-- `GET /api/billing/payments/latest` - Obtener último pago
 
 ### Transcripción
 

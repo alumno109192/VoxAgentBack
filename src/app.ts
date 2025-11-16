@@ -15,6 +15,9 @@ import webhookRoutes from './routes/webhooks';
 import adminRoutes from './routes/admin';
 import contactRoutes from './routes/contact';
 import billingRoutes from './routes/billing';
+import tenantRoutes from './routes/tenant';
+import callsRoutes from './routes/calls';
+import transcriptionsRoutes from './routes/transcriptions';
 
 const app: Application = express();
 
@@ -59,6 +62,20 @@ app.use((req, _res, next) => {
 
 // Routes
 app.use('/health', healthRoutes);
+
+// Public endpoints (with /auth prefix as per spec)
+app.use('/auth', authRoutes);
+
+// Webhook endpoints (public, no /api prefix)
+app.use('/webhooks', webhookRoutes);
+
+// Protected endpoints for panel interno (require JWT)
+app.use('/calls', callsRoutes);
+app.use('/transcriptions', transcriptionsRoutes);
+app.use('/billing', billingRoutes);
+app.use('/tenant', tenantRoutes);
+
+// Legacy /api prefix routes (keep for backward compatibility)
 app.use('/api/auth', authRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);

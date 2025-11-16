@@ -1,16 +1,12 @@
-import { Router, Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import config from '../config';
-import logger from '../utils/logger';
-import { AuthRequest, authenticate } from '../middleware/auth';
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import * as authController from '../controllers/authController';
 
 const router = Router();
 
 /**
  * @swagger
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: User login
  *     tags: [Auth]
@@ -20,157 +16,98 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
+ *                 example: admin@voicetotem.com
  *               password:
  *                 type: string
+ *                 format: password
+ *                 example: SecurePassword123
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     tenantId:
+ *                       type: string
+ *       400:
+ *         description: Missing email or password
+ *       401:
+ *         description: Invalid credentials
  */
-router.post('/login', async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
-      return;
-    }
-
-    // Find user with password
-    const user = await User.findOne({ email, isActive: true })
-      .select('+hashedPassword')
-      .populate('tenantId');
-
-    if (!user) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
-
-    if (!isValidPassword) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-
-    // Generate tokens
-    const accessToken = jwt.sign(
-      {
-        userId: user.id,
-        tenantId: user.tenantId,
-        role: user.role,
-      },
-      config.jwt.secret as string,
-      { expiresIn: config.jwt.accessExpires } as any
-    );
-
-    const refreshToken = jwt.sign(
-      {
-        userId: user.id,
-        type: 'refresh',
-      },
-      config.jwt.secret as string,
-      { expiresIn: config.jwt.refreshExpires } as any
-    );
-
-    // Save refresh token
-    user.refreshToken = refreshToken;
-    user.lastLogin = new Date();
-    await user.save();
-
-    logger.info(`User logged in: ${user.email}`);
-
-    res.json({
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        tenantId: user.tenantId,
-      },
-    });
-  } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
+router.post('/login', authController.login);
 
 /**
  * @swagger
- * /api/auth/refresh:
+ * /auth/refresh:
  *   post:
  *     summary: Refresh access token
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *       400:
+ *         description: Refresh token is required
+ *       401:
+ *         description: Invalid refresh token
  */
-router.post('/refresh', async (req: Request, res: Response) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      res.status(400).json({ error: 'Refresh token is required' });
-      return;
-    }
-
-    // Verify refresh token
-    const decoded = jwt.verify(refreshToken, config.jwt.secret) as {
-      userId: string;
-      type: string;
-    };
-
-    if (decoded.type !== 'refresh') {
-      res.status(401).json({ error: 'Invalid token type' });
-      return;
-    }
-
-    // Find user
-    const user = await User.findById(decoded.userId).select('+refreshToken');
-
-    if (!user || user.refreshToken !== refreshToken || !user.isActive) {
-      res.status(401).json({ error: 'Invalid refresh token' });
-      return;
-    }
-
-    // Generate new access token
-    const accessToken = jwt.sign(
-      {
-        userId: user.id,
-        tenantId: user.tenantId,
-        role: user.role,
-      },
-      config.jwt.secret as string,
-      { expiresIn: config.jwt.accessExpires } as any
-    );
-
-    res.json({ accessToken });
-  } catch (error) {
-    logger.error('Token refresh error:', error);
-    res.status(401).json({ error: 'Invalid refresh token' });
-  }
-});
+router.post('/refresh', authController.refresh);
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: User logout
  *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/logout', authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    if (req.userId) {
-      await User.findByIdAndUpdate(req.userId, { $unset: { refreshToken: 1 } });
-    }
-
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    logger.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
-  }
-});
+router.post('/logout', authenticate, authController.logout);
 
 export default router;

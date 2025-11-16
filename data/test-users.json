@@ -1,0 +1,278 @@
+{
+  "tenant": {
+    "id": "test-tenant-001",
+    "name": "Demo Medical Center",
+    "apiKey": "demo-api-key-32-chars-long-test",
+    "isActive": true,
+    "status": "active",
+    "domain": "democenter.com",
+    "contactEmail": "admin@democenter.com",
+    "contactPhone": "+1234567890",
+    "billingMethod": "invoice",
+    "quotaLimits": {
+      "maxCallsPerMonth": 1000,
+      "maxMinutesPerMonth": 5000,
+      "maxStorageGB": 10
+    },
+    "currentUsage": {
+      "callsThisMonth": 45,
+      "minutesThisMonth": 342,
+      "storageUsedGB": 2.3
+    },
+    "settings": {
+      "allowRecordings": true,
+      "retentionDays": 90,
+      "enableWhisperFallback": false,
+      "language": "en",
+      "voiceId": "default-voice"
+    },
+    "metadata": {
+      "industry": "healthcare",
+      "timezone": "America/New_York"
+    }
+  },
+  "users": [
+    {
+      "id": "user-admin-001",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "password": "Admin123!",
+      "hashedPassword": "$2a$10$cbd/kCaGbxNnwvv80tJoeOWPPInraRHcZKOMM0S91zPjuDb1NZHh2",
+      "role": "admin",
+      "tenantId": "test-tenant-001",
+      "isActive": true,
+      "createdAt": "2024-11-01T10:00:00.000Z"
+    },
+    {
+      "id": "user-operator-001",
+      "name": "Operator User",
+      "email": "operator@example.com",
+      "password": "Operator123!",
+      "hashedPassword": "$2a$10$x5HRwJWRrcf.JpaGwZOLHeCmiuB1jMtTSWCxmnAu9h9SzNRbas3d6",
+      "role": "operator",
+      "tenantId": "test-tenant-001",
+      "isActive": true,
+      "createdAt": "2024-11-01T10:00:00.000Z"
+    }
+  ],
+  "calls": [
+    {
+      "id": "call-001",
+      "blandCallId": "bland-call-001",
+      "tenantId": "test-tenant-001",
+      "userId": "user-operator-001",
+      "from": "+1234567890",
+      "to": "+0987654321",
+      "direction": "inbound",
+      "status": "completed",
+      "startedAt": "2024-11-10T10:00:00.000Z",
+      "endedAt": "2024-11-10T10:05:30.000Z",
+      "durationSec": 330,
+      "cost": 0.055,
+      "recordingUrl": "https://storage.example.com/recordings/call-001.mp3",
+      "metadata": {
+        "patientName": "John Doe",
+        "patientId": "P-12345",
+        "isConfidential": false,
+        "tags": ["consultation", "follow-up"],
+        "notes": "Patient follow-up for medication review"
+      }
+    },
+    {
+      "id": "call-002",
+      "blandCallId": "bland-call-002",
+      "tenantId": "test-tenant-001",
+      "userId": "user-operator-001",
+      "from": "+1111111111",
+      "to": "+0987654321",
+      "direction": "inbound",
+      "status": "completed",
+      "startedAt": "2024-11-11T14:30:00.000Z",
+      "endedAt": "2024-11-11T14:37:15.000Z",
+      "durationSec": 435,
+      "cost": 0.073,
+      "recordingUrl": "https://storage.example.com/recordings/call-002.mp3",
+      "metadata": {
+        "patientName": "Jane Smith",
+        "patientId": "P-67890",
+        "isConfidential": true,
+        "tags": ["new-patient", "intake"],
+        "notes": "Initial consultation and medical history"
+      }
+    },
+    {
+      "id": "call-003",
+      "blandCallId": "bland-call-003",
+      "tenantId": "test-tenant-001",
+      "userId": "user-operator-001",
+      "from": "+2222222222",
+      "to": "+0987654321",
+      "direction": "outbound",
+      "status": "completed",
+      "startedAt": "2024-11-12T09:15:00.000Z",
+      "endedAt": "2024-11-12T09:22:45.000Z",
+      "durationSec": 465,
+      "cost": 0.078,
+      "recordingUrl": "https://storage.example.com/recordings/call-003.mp3",
+      "metadata": {
+        "patientName": "Robert Johnson",
+        "patientId": "P-11223",
+        "isConfidential": false,
+        "tags": ["prescription", "refill"],
+        "notes": "Prescription refill request"
+      }
+    }
+  ],
+  "transcriptions": [
+    {
+      "id": "trans-001",
+      "callId": "call-001",
+      "tenantId": "test-tenant-001",
+      "text": "Patient reports improvement in symptoms after starting the new medication. Blood pressure is stable. Recommended to continue current treatment plan and follow up in 2 weeks.",
+      "language": "en",
+      "confidence": 0.95,
+      "status": "completed",
+      "provider": "bland",
+      "chunks": [
+        {
+          "start": 0,
+          "end": 5.2,
+          "text": "Patient reports improvement in symptoms",
+          "speaker": "doctor",
+          "confidence": 0.98
+        },
+        {
+          "start": 5.2,
+          "end": 12.5,
+          "text": "after starting the new medication",
+          "speaker": "doctor",
+          "confidence": 0.93
+        },
+        {
+          "start": 12.5,
+          "end": 18.3,
+          "text": "Blood pressure is stable",
+          "speaker": "doctor",
+          "confidence": 0.96
+        }
+      ],
+      "metadata": {
+        "durationSec": 330,
+        "wordCount": 32,
+        "processingTimeMs": 1200
+      },
+      "processedAt": "2024-11-10T10:06:00.000Z",
+      "createdAt": "2024-11-10T10:05:35.000Z"
+    },
+    {
+      "id": "trans-002",
+      "callId": "call-002",
+      "tenantId": "test-tenant-001",
+      "text": "New patient intake completed. Medical history documented including current medications, allergies, and previous surgeries. Patient scheduled for lab work next week.",
+      "language": "en",
+      "confidence": 0.92,
+      "status": "completed",
+      "provider": "bland",
+      "chunks": [
+        {
+          "start": 0,
+          "end": 4.8,
+          "text": "New patient intake completed",
+          "speaker": "operator",
+          "confidence": 0.94
+        },
+        {
+          "start": 4.8,
+          "end": 15.2,
+          "text": "Medical history documented including current medications, allergies, and previous surgeries",
+          "speaker": "operator",
+          "confidence": 0.91
+        }
+      ],
+      "metadata": {
+        "durationSec": 435,
+        "wordCount": 28,
+        "processingTimeMs": 1500
+      },
+      "processedAt": "2024-11-11T14:38:00.000Z",
+      "createdAt": "2024-11-11T14:37:20.000Z"
+    },
+    {
+      "id": "trans-003",
+      "callId": "call-003",
+      "tenantId": "test-tenant-001",
+      "text": "Prescription refill request processed. Patient requested refill for hypertension medication. Verified with pharmacy and approved for 90-day supply. Patient advised to monitor blood pressure daily.",
+      "language": "en",
+      "confidence": 0.94,
+      "status": "completed",
+      "provider": "bland",
+      "chunks": [
+        {
+          "start": 0,
+          "end": 6.5,
+          "text": "Prescription refill request processed",
+          "speaker": "operator",
+          "confidence": 0.95
+        },
+        {
+          "start": 6.5,
+          "end": 14.2,
+          "text": "Patient requested refill for hypertension medication",
+          "speaker": "patient",
+          "confidence": 0.92
+        }
+      ],
+      "metadata": {
+        "durationSec": 465,
+        "wordCount": 35,
+        "processingTimeMs": 1350
+      },
+      "processedAt": "2024-11-12T09:23:00.000Z",
+      "createdAt": "2024-11-12T09:22:50.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "payment-001",
+      "tenantId": "test-tenant-001",
+      "type": "stripe_payment",
+      "amount": 2500,
+      "currency": "usd",
+      "status": "paid",
+      "gatewayId": "pi_test_1234567890",
+      "description": "Monthly subscription - November 2024",
+      "metadata": {
+        "plan": "professional",
+        "billingCycle": "monthly"
+      },
+      "createdAt": "2024-11-01T00:00:00.000Z",
+      "paidAt": "2024-11-01T00:05:23.000Z"
+    },
+    {
+      "id": "payment-002",
+      "tenantId": "test-tenant-001",
+      "type": "call",
+      "amount": 555,
+      "currency": "usd",
+      "status": "paid",
+      "description": "Call charges for October 2024 (45 calls, 342 minutes)",
+      "metadata": {
+        "callCount": 45,
+        "totalMinutes": 342,
+        "averageCostPerCall": 0.012
+      },
+      "createdAt": "2024-11-01T00:00:00.000Z",
+      "paidAt": "2024-11-01T00:05:23.000Z"
+    }
+  ],
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "Datos de prueba para panel interno del cliente",
+    "generatedAt": "2024-11-16T17:00:00.000Z",
+    "notes": [
+      "Los hashedPassword son bcrypt con salt 10 rounds",
+      "Las contraseñas en texto plano son solo para referencia de pruebas",
+      "Los IDs son strings simples para facilitar las pruebas sin MongoDB"
+    ]
+  }
+}

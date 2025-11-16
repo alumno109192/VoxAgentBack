@@ -4,6 +4,10 @@ export interface ITenant extends Document {
   name: string;
   apiKey: string;
   isActive: boolean;
+  status: 'active' | 'suspended' | 'inactive';
+  domain?: string;
+  contactEmail: string;
+  contactPhone?: string;
   quotaLimits: {
     maxCallsPerMonth: number;
     maxMinutesPerMonth: number;
@@ -17,12 +21,14 @@ export interface ITenant extends Document {
   };
   billingMethod: 'stripe' | 'invoice' | 'prepaid';
   stripeCustomerId?: string;
-  contactEmail: string;
   settings: {
     allowRecordings: boolean;
     retentionDays: number;
     enableWhisperFallback: boolean;
+    language?: string;
+    voiceId?: string;
   };
+  metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +49,25 @@ const TenantSchema = new Schema<ITenant>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['active', 'suspended', 'inactive'],
+      default: 'active',
+    },
+    domain: {
+      type: String,
+      trim: true,
+    },
+    contactEmail: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+    contactPhone: {
+      type: String,
+      trim: true,
     },
     quotaLimits: {
       maxCallsPerMonth: {
@@ -84,12 +109,6 @@ const TenantSchema = new Schema<ITenant>(
     stripeCustomerId: {
       type: String,
     },
-    contactEmail: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
     settings: {
       allowRecordings: {
         type: Boolean,
@@ -103,6 +122,18 @@ const TenantSchema = new Schema<ITenant>(
         type: Boolean,
         default: false,
       },
+      language: {
+        type: String,
+        default: 'en',
+      },
+      voiceId: {
+        type: String,
+        default: 'default',
+      },
+    },
+    metadata: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
   {

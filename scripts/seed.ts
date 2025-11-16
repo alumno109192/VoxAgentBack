@@ -30,7 +30,10 @@ async function seed() {
       name: 'Demo Medical Center',
       apiKey: generateRandomString(32),
       isActive: true,
+      status: 'active',
+      domain: 'democenter.com',
       contactEmail: 'admin@democenter.com',
+      contactPhone: '+1234567890',
       billingMethod: 'invoice',
       quotaLimits: {
         maxCallsPerMonth: 1000,
@@ -41,6 +44,12 @@ async function seed() {
         allowRecordings: true,
         retentionDays: 90,
         enableWhisperFallback: false,
+        language: 'en',
+        voiceId: 'default-voice',
+      },
+      metadata: {
+        industry: 'healthcare',
+        timezone: 'America/New_York',
       },
     });
     logger.info(`Created tenant: ${tenant.name}`);
