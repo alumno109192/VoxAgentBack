@@ -8,15 +8,21 @@ export interface ITenant extends Document {
   domain?: string;
   contactEmail: string;
   contactPhone?: string;
+  planId?: mongoose.Types.ObjectId;
+  planTier: 'free' | 'starter' | 'professional' | 'enterprise';
   quotaLimits: {
     maxCallsPerMonth: number;
     maxMinutesPerMonth: number;
     maxStorageGB: number;
+    maxAgents: number;
+    voxagentaiQueries: number;
   };
   currentUsage: {
     callsThisMonth: number;
     minutesThisMonth: number;
     storageUsedGB: number;
+    agentsCreated: number;
+    voxagentaiQueriesUsed: number;
     lastResetDate: Date;
   };
   billingMethod: 'stripe' | 'invoice' | 'prepaid';
@@ -69,6 +75,15 @@ const TenantSchema = new Schema<ITenant>(
       type: String,
       trim: true,
     },
+    planId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Plan',
+    },
+    planTier: {
+      type: String,
+      enum: ['free', 'starter', 'professional', 'enterprise'],
+      default: 'free',
+    },
     quotaLimits: {
       maxCallsPerMonth: {
         type: Number,
@@ -82,6 +97,14 @@ const TenantSchema = new Schema<ITenant>(
         type: Number,
         default: 10,
       },
+      maxAgents: {
+        type: Number,
+        default: 3,
+      },
+      voxagentaiQueries: {
+        type: Number,
+        default: 100,
+      },
     },
     currentUsage: {
       callsThisMonth: {
@@ -93,6 +116,14 @@ const TenantSchema = new Schema<ITenant>(
         default: 0,
       },
       storageUsedGB: {
+        type: Number,
+        default: 0,
+      },
+      agentsCreated: {
+        type: Number,
+        default: 0,
+      },
+      voxagentaiQueriesUsed: {
         type: Number,
         default: 0,
       },

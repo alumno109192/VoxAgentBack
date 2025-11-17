@@ -4,6 +4,38 @@ Backend profesional para Asistente de Voz médico con integración **Bland Voice
 
 ## 🚀 Características
 
+### Panel Interno del Cliente
+- ✅ **Gestión de Llamadas** - Historial completo con filtros y paginación
+- ✅ **Transcripciones** - Búsqueda y análisis de texto
+- ✅ **Facturación** - Historial de pagos y suscripciones
+- ✅ **Configuración** - Gestión de tenant y API keys
+
+### Gestión de Agentes Virtuales
+- ✅ **CRUD Completo** - Crear, editar, listar y eliminar agentes
+- ✅ **Configuración Avanzada** - Language, voice, behavior, temperature
+- ✅ **Estadísticas** - Total de llamadas, minutos, última actividad
+- ✅ **Límites por Plan** - Control de cantidad de agentes según suscripción
+- ✅ **Categorización** - Tags, categorías y knowledge base
+
+### Sistema de Uso (Angelitos)
+- ✅ **Tracking de Minutos** - Consumo por tipo (call, voxagentai, transcription)
+- ✅ **Analytics** - Agrupación por día/mes para gráficos
+- ✅ **Comparativas** - Mes actual vs mes anterior con porcentajes
+- ✅ **Breakdown** - Desglose por tipo de servicio
+
+### Gestión de Planes
+- ✅ **4 Planes** - Free, Starter, Professional, Enterprise
+- ✅ **Límites Configurables** - Agentes, minutos, llamadas, storage, queries
+- ✅ **Cambio de Plan** - Upgrade/downgrade con actualización de quotas
+- ✅ **Porcentajes de Uso** - Visualización de consumo vs límites
+
+### VoxAgentAI Embebido
+- ✅ **Queries Text/Voice** - Consultas en modo texto o voz
+- ✅ **Rate Limiting** - Control de cuota por plan
+- ✅ **Usage Tracking** - Registro de tokens y costos
+- ✅ **Status Endpoint** - Consultar cuota disponible y estadísticas
+
+### Infraestructura
 - ✅ **Integración Bland Voice** con webhook handling
 - ✅ **Transcripción** de llamadas (streaming y post-call)
 - ✅ **Multi-tenant** con quotas y API keys

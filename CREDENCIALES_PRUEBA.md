@@ -130,10 +130,66 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 # 6. Historial de pagos
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   "http://localhost:4000/billing/payments?tenantId=test-tenant-001" | jq .
+
+# 7. Crear un agente virtual
+curl -X POST http://localhost:4000/agents \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "name": "Recepción Médica",
+    "description": "Agente para atención de pacientes",
+    "configuration": {
+      "language": "es",
+      "voiceId": "voice-friendly",
+      "behavior": "Profesional y empático",
+      "temperature": 0.7,
+      "welcomeMessage": "Hola, soy el asistente virtual. ¿En qué puedo ayudarte?"
+    },
+    "metadata": {
+      "tags": ["recepcion", "atencion"],
+      "category": "customer-service"
+    }
+  }' | jq .
+
+# 8. Listar agentes
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/agents?tenantId=test-tenant-001" | jq .
+
+# 9. Consultar uso (angelitos)
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/usage?tenantId=test-tenant-001&groupBy=day" | jq .
+
+# 10. Resumen de uso
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/usage/summary?tenantId=test-tenant-001" | jq .
+
+# 11. Ver plan actual
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/plan/current?tenantId=test-tenant-001" | jq .
+
+# 12. Listar planes disponibles
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:4000/plan | jq .
+
+# 13. Consulta a VoxAgentAI
+curl -X POST http://localhost:4000/voxagentai/query \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "query": "¿Cuál es el horario de atención?",
+    "mode": "text"
+  }' | jq .
+
+# 14. Estado de VoxAgentAI
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/voxagentai/status?tenantId=test-tenant-001" | jq .
 ```
 
 ## 🎯 Endpoints del Panel Interno
 
+### Gestión de Datos
 | Método | Endpoint | Requiere Auth | Descripción |
 |--------|----------|---------------|-------------|
 | POST | `/auth/login` | ❌ | Login con email/password |
@@ -145,6 +201,35 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 | GET | `/transcriptions` | ✅ | Lista de transcripciones |
 | GET | `/transcriptions/:id` | ✅ | Detalle de transcripción |
 | GET | `/billing/payments` | ✅ | Historial de pagos |
+
+### 🤖 Gestión de Agentes
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/agents` | ✅ | Lista de agentes virtuales |
+| GET | `/agents/:id` | ✅ | Detalle de agente |
+| POST | `/agents` | ✅ | Crear nuevo agente |
+| PUT | `/agents/:id` | ✅ | Actualizar agente |
+| DELETE | `/agents/:id` | ✅ | Desactivar agente |
+
+### 📊 Uso y Consumo (Angelitos)
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/usage` | ✅ | Historial de consumo de minutos |
+| GET | `/usage/summary` | ✅ | Resumen con comparativa mensual |
+| POST | `/usage` | ✅ | Registrar consumo (interno) |
+
+### 💎 Gestión de Planes
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/plan/current` | ✅ | Plan actual con porcentajes de uso |
+| GET | `/plan` | ✅ | Lista de planes disponibles |
+| POST | `/plan/change` | ✅ | Cambiar plan del tenant |
+
+### 🎙️ VoxAgentAI
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| POST | `/voxagentai/query` | ✅ | Consulta a VoxAgentAI (texto/voz) |
+| GET | `/voxagentai/status` | ✅ | Estado y cuota de VoxAgentAI |
 
 ## 🔍 Verificación
 

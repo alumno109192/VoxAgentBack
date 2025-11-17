@@ -18,6 +18,10 @@ import billingRoutes from './routes/billing';
 import tenantRoutes from './routes/tenant';
 import callsRoutes from './routes/calls';
 import transcriptionsRoutes from './routes/transcriptions';
+import agentsRoutes from './routes/agents';
+import usageRoutes from './routes/usage';
+import plansRoutes from './routes/plans';
+import voxagentaiRoutes from './routes/voxagentai';
 
 const app: Application = express();
 
@@ -74,6 +78,10 @@ app.use('/calls', callsRoutes);
 app.use('/transcriptions', transcriptionsRoutes);
 app.use('/billing', billingRoutes);
 app.use('/tenant', tenantRoutes);
+app.use('/agents', agentsRoutes);
+app.use('/usage', usageRoutes);
+app.use('/plan', plansRoutes);
+app.use('/voxagentai', voxagentaiRoutes);
 
 // Legacy /api prefix routes (keep for backward compatibility)
 app.use('/api/auth', authRoutes);
