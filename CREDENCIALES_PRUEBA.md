@@ -185,6 +185,50 @@ curl -X POST http://localhost:4000/voxagentai/query \
 # 14. Estado de VoxAgentAI
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   "http://localhost:4000/voxagentai/status?tenantId=test-tenant-001" | jq .
+
+# ========== ENDPOINTS MOCK (Desarrollo/Demo) ==========
+
+# 15. Listar agentes mock
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/mock/agents?tenantId=test-tenant-001" | jq .
+
+# 16. Crear agente mock
+curl -X POST http://localhost:4000/mock/agents \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "name": "Agente Mock",
+    "description": "Agente de prueba",
+    "voice": "es-ES-Standard-A",
+    "behavior": "amable"
+  }' | jq .
+
+# 17. Obtener datos de uso mock
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/mock/usage?tenantId=test-tenant-001" | jq .
+
+# 18. Ver plan mock
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/mock/plan?tenantId=test-tenant-001" | jq .
+
+# 19. Consultar VoxAgentAI mock
+curl -X POST http://localhost:4000/mock/voxagentai/query \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "query": "¿Cómo funciona esto?",
+    "mode": "text"
+  }' | jq .
+
+# 20. Listar interacciones VoxAgentAI mock
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/mock/voxagentai?tenantId=test-tenant-001" | jq .
+
+# 21. Ver pagos mock
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/mock/payments?tenantId=test-tenant-001" | jq .
 ```
 
 ## 🎯 Endpoints del Panel Interno
@@ -230,6 +274,21 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 |--------|----------|---------------|-------------|
 | POST | `/voxagentai/query` | ✅ | Consulta a VoxAgentAI (texto/voz) |
 | GET | `/voxagentai/status` | ✅ | Estado y cuota de VoxAgentAI |
+
+### 📁 Mock Data (Desarrollo/Demo)
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/mock/agents` | ✅ | Lista de agentes mock |
+| GET | `/mock/agents/:id` | ✅ | Detalle de agente mock |
+| POST | `/mock/agents` | ✅ | Crear agente mock |
+| PUT | `/mock/agents/:id` | ✅ | Actualizar agente mock |
+| DELETE | `/mock/agents/:id` | ✅ | Eliminar agente mock |
+| GET | `/mock/usage` | ✅ | Datos de uso mock |
+| GET | `/mock/plan` | ✅ | Plan actual mock |
+| POST | `/mock/plan/change` | ✅ | Cambiar plan mock |
+| GET | `/mock/voxagentai` | ✅ | Interacciones VoxAgentAI mock |
+| POST | `/mock/voxagentai/query` | ✅ | Consulta VoxAgentAI mock |
+| GET | `/mock/payments` | ✅ | Historial de pagos mock |
 
 ## 🔍 Verificación
 

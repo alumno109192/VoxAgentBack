@@ -22,6 +22,7 @@ import agentsRoutes from './routes/agents';
 import usageRoutes from './routes/usage';
 import plansRoutes from './routes/plans';
 import voxagentaiRoutes from './routes/voxagentai';
+import mockRoutes from './routes/mock';
 
 const app: Application = express();
 
@@ -82,6 +83,9 @@ app.use('/agents', agentsRoutes);
 app.use('/usage', usageRoutes);
 app.use('/plan', plansRoutes);
 app.use('/voxagentai', voxagentaiRoutes);
+
+// Mock endpoints (development/demo)
+app.use('/mock', mockRoutes);
 
 // Legacy /api prefix routes (keep for backward compatibility)
 app.use('/api/auth', authRoutes);

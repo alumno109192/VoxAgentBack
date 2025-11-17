@@ -1,0 +1,54 @@
+[
+  {
+    "id": "pay-001",
+    "tenantId": "test-tenant-001",
+    "amount": 99.00,
+    "currency": "USD",
+    "type": "subscription",
+    "description": "Plan Professional - Noviembre 2025",
+    "status": "completed",
+    "paymentMethod": "credit_card",
+    "cardLast4": "4242",
+    "createdAt": "2025-11-01T00:00:00Z",
+    "paidAt": "2025-11-01T00:05:23Z"
+  },
+  {
+    "id": "pay-002",
+    "tenantId": "test-tenant-001",
+    "amount": 20.18,
+    "currency": "USD",
+    "type": "usage",
+    "description": "Consumo adicional - 403.5 minutos",
+    "status": "pending",
+    "paymentMethod": "credit_card",
+    "cardLast4": "4242",
+    "createdAt": "2025-11-17T12:00:00Z",
+    "paidAt": null
+  },
+  {
+    "id": "pay-003",
+    "tenantId": "test-tenant-001",
+    "amount": 99.00,
+    "currency": "USD",
+    "type": "subscription",
+    "description": "Plan Professional - Octubre 2025",
+    "status": "completed",
+    "paymentMethod": "credit_card",
+    "cardLast4": "4242",
+    "createdAt": "2025-10-01T00:00:00Z",
+    "paidAt": "2025-10-01T00:03:15Z"
+  },
+  {
+    "id": "pay-004",
+    "tenantId": "test-tenant-001",
+    "amount": 15.75,
+    "currency": "USD",
+    "type": "usage",
+    "description": "Consumo adicional - 315 minutos",
+    "status": "completed",
+    "paymentMethod": "credit_card",
+    "cardLast4": "4242",
+    "createdAt": "2025-10-31T23:59:00Z",
+    "paidAt": "2025-11-01T00:05:23Z"
+  }
+]

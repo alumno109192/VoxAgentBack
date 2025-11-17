@@ -1,0 +1,72 @@
+[
+  {
+    "id": "interaction-001",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-001",
+    "query": "¿Cuál es el estado de mi pedido #12345?",
+    "response": "Su pedido #12345 está en tránsito y se estima que llegará mañana entre las 10:00 y 14:00 horas. Puede rastrear su envío en tiempo real desde nuestro portal.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 85,
+      "cost": 0.00085,
+      "duration": 1.2
+    },
+    "timestamp": "2025-11-17T10:15:00Z"
+  },
+  {
+    "id": "interaction-002",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-002",
+    "query": "Necesito agendar una cita con el Dr. García",
+    "response": "Claro, el Dr. García tiene disponibilidad para esta semana. ¿Prefiere mañana martes a las 15:00 o el viernes a las 11:00?",
+    "mode": "voice",
+    "metadata": {
+      "tokens": 92,
+      "cost": 0.00092,
+      "duration": 2.5
+    },
+    "timestamp": "2025-11-17T10:30:00Z"
+  },
+  {
+    "id": "interaction-003",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-001",
+    "query": "¿Tienen productos en oferta?",
+    "response": "¡Sí! Esta semana tenemos el 20% de descuento en toda la categoría de electrónica y el 15% en ropa deportiva. Las ofertas son válidas hasta el domingo.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 78,
+      "cost": 0.00078,
+      "duration": 0.9
+    },
+    "timestamp": "2025-11-17T11:00:00Z"
+  },
+  {
+    "id": "interaction-004",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-003",
+    "query": "Mi impresora no imprime, ¿qué hago?",
+    "response": "Vamos a revisar paso a paso: 1) Verifique que la impresora esté encendida y conectada, 2) Revise que tenga papel y tinta, 3) En su computadora, vaya a Configuración > Impresoras y compruebe que esté seleccionada como predeterminada. ¿Puede confirmar estos pasos?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 120,
+      "cost": 0.00120,
+      "duration": 1.8
+    },
+    "timestamp": "2025-11-17T11:30:00Z"
+  },
+  {
+    "id": "interaction-005",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-002",
+    "query": "¿Qué documentos necesito para la cita?",
+    "response": "Para su cita médica necesitará: DNI o pasaporte, tarjeta del seguro médico (si aplica), y cualquier resultado de análisis o estudios previos relacionados con su consulta. Si es primera vez, traiga también su historial médico.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 95,
+      "cost": 0.00095,
+      "duration": 1.3
+    },
+    "timestamp": "2025-11-17T12:00:00Z"
+  }
+]

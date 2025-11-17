@@ -1,0 +1,70 @@
+{
+  "tenantId": "test-tenant-001",
+  "period": "2025-11",
+  "summary": {
+    "totalMinutes": 403.5,
+    "totalCalls": 135,
+    "totalCost": 20.18,
+    "unit": "angelitos"
+  },
+  "byType": {
+    "call": {
+      "minutes": 358.3,
+      "count": 135,
+      "cost": 17.92
+    },
+    "voxagentai": {
+      "minutes": 35.2,
+      "count": 48,
+      "cost": 1.76
+    },
+    "transcription": {
+      "minutes": 10.0,
+      "count": 25,
+      "cost": 0.50
+    }
+  },
+  "byAgent": [
+    {
+      "agentId": "agent-001",
+      "agentName": "Agente Comercial",
+      "minutes": 123.5,
+      "calls": 45,
+      "cost": 6.18
+    },
+    {
+      "agentId": "agent-002",
+      "agentName": "Recepción Médica",
+      "minutes": 234.8,
+      "calls": 78,
+      "cost": 11.74
+    },
+    {
+      "agentId": "agent-003",
+      "agentName": "Soporte Técnico",
+      "minutes": 45.2,
+      "calls": 12,
+      "cost": 2.26
+    }
+  ],
+  "dailyUsage": [
+    { "date": "2025-11-01", "minutes": 12.5, "calls": 4 },
+    { "date": "2025-11-02", "minutes": 18.3, "calls": 6 },
+    { "date": "2025-11-03", "minutes": 15.7, "calls": 5 },
+    { "date": "2025-11-04", "minutes": 22.1, "calls": 8 },
+    { "date": "2025-11-05", "minutes": 19.8, "calls": 7 },
+    { "date": "2025-11-06", "minutes": 25.4, "calls": 9 },
+    { "date": "2025-11-07", "minutes": 28.6, "calls": 10 },
+    { "date": "2025-11-08", "minutes": 31.2, "calls": 11 },
+    { "date": "2025-11-09", "minutes": 27.9, "calls": 9 },
+    { "date": "2025-11-10", "minutes": 24.5, "calls": 8 },
+    { "date": "2025-11-11", "minutes": 21.3, "calls": 7 },
+    { "date": "2025-11-12", "minutes": 26.8, "calls": 9 },
+    { "date": "2025-11-13", "minutes": 29.4, "calls": 10 },
+    { "date": "2025-11-14", "minutes": 32.1, "calls": 11 },
+    { "date": "2025-11-15", "minutes": 28.7, "calls": 10 },
+    { "date": "2025-11-16", "minutes": 30.2, "calls": 11 },
+    { "date": "2025-11-17", "minutes": 9.0, "calls": 0 }
+  ],
+  "updatedAt": "2025-11-17T12:00:00Z"
+}

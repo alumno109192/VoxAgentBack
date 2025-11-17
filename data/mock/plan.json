@@ -1,0 +1,54 @@
+{
+  "tenantId": "test-tenant-001",
+  "currentPlan": {
+    "id": "plan-professional",
+    "name": "Plan Professional",
+    "tier": "professional",
+    "description": "Para empresas en crecimiento",
+    "limits": {
+      "maxAgents": 20,
+      "maxMinutesPerMonth": 2000,
+      "maxCallsPerMonth": 1000,
+      "maxStorageGB": 20,
+      "voxagentaiQueries": 2000
+    },
+    "features": [
+      "20 agentes virtuales",
+      "2,000 minutos/mes",
+      "1,000 llamadas/mes",
+      "20 GB de almacenamiento",
+      "2,000 consultas VoxAgentAI/mes",
+      "Soporte 24/7",
+      "Análisis avanzados",
+      "Webhooks ilimitados",
+      "Integración API completa",
+      "Exportación de datos",
+      "Base de conocimiento personalizada"
+    ],
+    "pricing": {
+      "monthly": 99,
+      "yearly": 990,
+      "currency": "USD"
+    },
+    "isActive": true
+  },
+  "usage": {
+    "agentsCreated": 3,
+    "agentsUsagePercent": 15.0,
+    "minutesUsed": 403.5,
+    "minutesUsagePercent": 20.18,
+    "callsUsed": 135,
+    "callsUsagePercent": 13.5,
+    "storageUsed": 4.7,
+    "storageUsagePercent": 23.5,
+    "voxagentaiQueriesUsed": 48,
+    "voxagentaiUsagePercent": 2.4
+  },
+  "billingCycle": {
+    "startDate": "2025-11-01T00:00:00Z",
+    "endDate": "2025-11-30T23:59:59Z",
+    "nextBillingDate": "2025-12-01T00:00:00Z"
+  },
+  "subscriptionStatus": "active",
+  "updatedAt": "2025-11-17T12:00:00Z"
+}
