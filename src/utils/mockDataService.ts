@@ -275,6 +275,97 @@ class MockDataService {
       return payment;
     });
   }
+
+  // ============ WIDGET CONFIG ============
+  async getWidgetConfig(tenantId: string) {
+    try {
+      return await this.readJSON<any>(tenantId, 'widget-config');
+    } catch (error) {
+      // Si no existe, devolver configuración por defecto
+      return {
+        tenantId,
+        theme: 'light',
+        language: 'es-ES',
+        voice: 'female',
+        position: 'bottom-right',
+        enabled: true,
+        primaryColor: '#4F46E5',
+        secondaryColor: '#818CF8',
+        welcomeMessage: '¡Hola! ¿En qué puedo ayudarte hoy?',
+        placeholderText: 'Escribe tu pregunta...',
+        buttonText: 'Enviar',
+        maxQueriesPerDay: 100,
+      };
+    }
+  }
+
+  async updateWidgetConfig(tenantId: string, config: any) {
+    return this.withLock(tenantId, 'widget-config', async () => {
+      const existingConfig = await this.getWidgetConfig(tenantId);
+      const updatedConfig = {
+        ...existingConfig,
+        ...config,
+        tenantId, // Preservar tenantId
+        updatedAt: new Date().toISOString(),
+      };
+      await this.writeJSON(tenantId, 'widget-config', updatedConfig);
+      return updatedConfig;
+    });
+  }
+
+  // ============ WIDGET INTERACTIONS ============
+  async getWidgetInteractions(tenantId: string, limit?: number) {
+    try {
+      const interactions = await this.readJSON<any[]>(tenantId, 'widget-interactions');
+      if (limit) {
+        return interactions.slice(-limit);
+      }
+      return interactions;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async addWidgetInteraction(tenantId: string, interaction: any) {
+    return this.withLock(tenantId, 'widget-interactions', async () => {
+      let interactions = [];
+      try {
+        interactions = await this.readJSON<any[]>(tenantId, 'widget-interactions');
+      } catch (error) {
+        // Si no existe el archivo, crear array vacío
+        interactions = [];
+      }
+      
+      const newInteraction = {
+        ...interaction,
+        id: interaction.id || `widget-int-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        tenantId,
+        timestamp: interaction.timestamp || new Date().toISOString(),
+      };
+      
+      interactions.push(newInteraction);
+      
+      // Mantener solo las últimas 1000 interacciones por tenant
+      if (interactions.length > 1000) {
+        interactions = interactions.slice(-1000);
+      }
+      
+      await this.writeJSON(tenantId, 'widget-interactions', interactions);
+      return newInteraction;
+    });
+  }
+
+  async getWidgetInteractionsCount(tenantId: string, since?: Date): Promise<number> {
+    try {
+      const interactions = await this.readJSON<any[]>(tenantId, 'widget-interactions');
+      if (!since) {
+        return interactions.length;
+      }
+      return interactions.filter(i => new Date(i.timestamp) >= since).length;
+    } catch (error) {
+      return 0;
+    }
+  }
 }
 
 export default new MockDataService();

@@ -25,6 +25,8 @@ El backend está configurado para funcionar **SIN MongoDB** utilizando un archiv
 
 **Permisos**: Acceso completo a todos los endpoints
 
+**API Key Widget**: `vox_test_sk_1234567890abcdef`
+
 ### 2. Usuario Operador
 ```json
 {
@@ -229,6 +231,41 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 # 21. Ver pagos mock
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   "http://localhost:4000/mock/payments?tenantId=test-tenant-001" | jq .
+
+# ========== ENDPOINTS WIDGET EMBEBIBLE ==========
+
+# 22. Obtener configuración del widget (público)
+curl -s 'http://localhost:4000/widget/config?tenantId=test-tenant-001' | jq .
+
+# 23. Consulta desde widget (con API Key)
+curl -X POST 'http://localhost:4000/widget/query' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: vox_test_sk_1234567890abcdef' \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "query": "¿Cuál es el horario de atención?",
+    "mode": "text",
+    "sessionId": "session-abc123"
+  }' | jq .
+
+# 24. Historial de interacciones del widget
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/widget/interactions?tenantId=test-tenant-001" | jq .
+
+# 25. Estadísticas del widget
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:4000/widget/stats?tenantId=test-tenant-001" | jq .
+
+# 26. Actualizar configuración del widget
+curl -X PUT http://localhost:4000/widget/config \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "theme": "dark",
+    "primaryColor": "#8B5CF6",
+    "welcomeMessage": "¡Bienvenido! ¿Cómo puedo ayudarte?"
+  }' | jq .
 ```
 
 ## 🎯 Endpoints del Panel Interno
@@ -289,6 +326,15 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 | GET | `/mock/voxagentai` | ✅ | Interacciones VoxAgentAI mock |
 | POST | `/mock/voxagentai/query` | ✅ | Consulta VoxAgentAI mock |
 | GET | `/mock/payments` | ✅ | Historial de pagos mock |
+
+### 🎨 Widget Embebible
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/widget/config` | ❌ (Público) | Configuración del widget |
+| POST | `/widget/query` | 🔑 (API Key) | Procesar consulta desde widget |
+| PUT | `/widget/config` | ✅ (JWT) | Actualizar configuración widget |
+| GET | `/widget/interactions` | ✅ (JWT) | Historial de interacciones |
+| GET | `/widget/stats` | ✅ (JWT) | Estadísticas de uso del widget |
 
 ## 🔍 Verificación
 

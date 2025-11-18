@@ -23,15 +23,45 @@ import usageRoutes from './routes/usage';
 import plansRoutes from './routes/plans';
 import voxagentaiRoutes from './routes/voxagentai';
 import mockRoutes from './routes/mock';
+import widgetRoutes from './routes/widget';
 
 const app: Application = express();
 
 // Security middleware
 app.use(helmet());
+
+// CORS configurado para permitir widgets embebibles
 app.use(
   cors({
-    origin: config.cors.origin,
+    origin: (origin, callback) => {
+      // Permitir requests sin origen (mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      // Lista de orígenes permitidos
+      const allowedOrigins = [
+        ...config.cors.origin, // Orígenes configurados
+        'http://localhost:3000', // Frontend dev
+        'http://localhost:5173', // Vite dev
+        'https://example.com', // Cliente ejemplo
+        'https://www.example.com',
+      ];
+      
+      // Permitir cualquier origen en desarrollo
+      if (config.env === 'development') {
+        return callback(null, true);
+      }
+      
+      // Verificar si el origen está permitido
+      if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Request-ID'],
+    exposedHeaders: ['X-Request-ID'],
   })
 );
 
@@ -73,6 +103,9 @@ app.use('/auth', authRoutes);
 
 // Webhook endpoints (public, no /api prefix)
 app.use('/webhooks', webhookRoutes);
+
+// Widget endpoints (public with API Key validation)
+app.use('/widget', widgetRoutes);
 
 // Protected endpoints for panel interno (require JWT)
 app.use('/calls', callsRoutes);
