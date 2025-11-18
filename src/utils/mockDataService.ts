@@ -6,7 +6,7 @@ import logger from './logger';
 const fileLocks = new Map<string, Promise<void>>();
 
 /**
- * Servicio para gestión segura de archivos JSON mock
+ * Servicio para gestión segura de archivos JSON mock por tenant
  */
 class MockDataService {
   private dataPath: string;
@@ -16,31 +16,37 @@ class MockDataService {
   }
 
   /**
-   * Lee un archivo JSON de forma segura
+   * Genera el path del archivo por tenant y tipo
    */
-  private async readJSON<T>(filename: string): Promise<T> {
-    const filePath = path.join(this.dataPath, filename);
+  private getFilePath(tenantId: string, type: string): string {
+    return path.join(this.dataPath, `${type}-${tenantId}.json`);
+  }
+
+  /**
+   * Lee un archivo JSON de forma segura por tenant
+   */
+  private async readJSON<T>(tenantId: string, type: string): Promise<T> {
+    const filePath = this.getFilePath(tenantId, type);
     
     try {
       const data = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(data) as T;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        logger.warn(`Mock file not found: ${filename}, returning empty data`);
-        return (filename.endsWith('agents.json') || 
-                filename.endsWith('payments.json') || 
-                filename.endsWith('voxagentai.json') ? [] : {}) as T;
+        logger.info(`Mock file not found: ${type}-${tenantId}.json, returning empty data`);
+        // Retornar array vacío o objeto vacío según el tipo
+        return (type === 'agents' || type === 'payments' || type === 'voxagentai' ? [] : {}) as T;
       }
-      logger.error(`Error reading mock file ${filename}:`, error);
+      logger.error(`Error reading mock file ${type}-${tenantId}.json:`, error);
       throw error;
     }
   }
 
   /**
-   * Escribe un archivo JSON de forma atómica
+   * Escribe un archivo JSON de forma atómica por tenant
    */
-  private async writeJSON<T>(filename: string, data: T): Promise<void> {
-    const filePath = path.join(this.dataPath, filename);
+  private async writeJSON<T>(tenantId: string, type: string, data: T): Promise<void> {
+    const filePath = this.getFilePath(tenantId, type);
     const tempPath = `${filePath}.tmp`;
 
     // Asegurar que el directorio existe
@@ -53,14 +59,14 @@ class MockDataService {
       // Renombrar atómicamente
       await fs.rename(tempPath, filePath);
       
-      logger.info(`Mock file written successfully: ${filename}`);
+      logger.info(`Mock file written successfully: ${type}-${tenantId}.json`);
     } catch (error) {
       // Limpiar archivo temporal en caso de error
       try {
         await fs.unlink(tempPath);
       } catch {}
       
-      logger.error(`Error writing mock file ${filename}:`, error);
+      logger.error(`Error writing mock file ${type}-${tenantId}.json:`, error);
       throw error;
     }
   }
@@ -68,9 +74,11 @@ class MockDataService {
   /**
    * Ejecuta una operación con lock para evitar condiciones de carrera
    */
-  private async withLock<T>(filename: string, operation: () => Promise<T>): Promise<T> {
+  private async withLock<T>(tenantId: string, type: string, operation: () => Promise<T>): Promise<T> {
+    const lockKey = `${type}-${tenantId}`;
+    
     // Esperar a que se libere el lock actual si existe
-    const currentLock = fileLocks.get(filename);
+    const currentLock = fileLocks.get(lockKey);
     if (currentLock) {
       await currentLock;
     }
@@ -81,7 +89,7 @@ class MockDataService {
       releaseLock = resolve;
     });
     
-    fileLocks.set(filename, newLock);
+    fileLocks.set(lockKey, newLock);
 
     try {
       const result = await operation();
@@ -89,28 +97,24 @@ class MockDataService {
     } finally {
       // Liberar lock
       releaseLock!();
-      fileLocks.delete(filename);
+      fileLocks.delete(lockKey);
     }
   }
 
   // ============ AGENTES ============
 
-  async getAgents(tenantId?: string) {
-    const agents = await this.readJSON<any[]>('agents.json');
-    if (tenantId) {
-      return agents.filter(a => a.tenantId === tenantId);
-    }
-    return agents;
+  async getAgents(tenantId: string) {
+    return this.readJSON<any[]>(tenantId, 'agents');
   }
 
-  async getAgentById(id: string) {
-    const agents = await this.readJSON<any[]>('agents.json');
+  async getAgentById(tenantId: string, id: string) {
+    const agents = await this.readJSON<any[]>(tenantId, 'agents');
     return agents.find(a => a.id === id);
   }
 
-  async createAgent(agent: any) {
-    return this.withLock('agents.json', async () => {
-      const agents = await this.readJSON<any[]>('agents.json');
+  async createAgent(tenantId: string, agent: any) {
+    return this.withLock(tenantId, 'agents', async () => {
+      const agents = await this.readJSON<any[]>(tenantId, 'agents');
       
       // Validar que no exista el ID
       if (agents.some(a => a.id === agent.id)) {
@@ -119,70 +123,72 @@ class MockDataService {
 
       agents.push({
         ...agent,
+        tenantId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
 
-      await this.writeJSON('agents.json', agents);
+      await this.writeJSON(tenantId, 'agents', agents);
       return agent;
     });
   }
 
-  async updateAgent(id: string, updates: any) {
-    return this.withLock('agents.json', async () => {
-      const agents = await this.readJSON<any[]>('agents.json');
+  async updateAgent(tenantId: string, id: string, updates: any) {
+    return this.withLock(tenantId, 'agents', async () => {
+      const agents = await this.readJSON<any[]>(tenantId, 'agents');
       const index = agents.findIndex(a => a.id === id);
       
       if (index === -1) {
         throw new Error(`Agent with id ${id} not found`);
       }
 
+      // Verificar que el agente pertenece al tenant
+      if (agents[index].tenantId !== tenantId) {
+        throw new Error('Agent does not belong to this tenant');
+      }
+
       agents[index] = {
         ...agents[index],
         ...updates,
         id, // Preservar ID
+        tenantId, // Preservar tenantId
         updatedAt: new Date().toISOString(),
       };
 
-      await this.writeJSON('agents.json', agents);
+      await this.writeJSON(tenantId, 'agents', agents);
       return agents[index];
     });
   }
 
-  async deleteAgent(id: string) {
-    return this.withLock('agents.json', async () => {
-      const agents = await this.readJSON<any[]>('agents.json');
-      const filteredAgents = agents.filter(a => a.id !== id);
+  async deleteAgent(tenantId: string, id: string) {
+    return this.withLock(tenantId, 'agents', async () => {
+      const agents = await this.readJSON<any[]>(tenantId, 'agents');
+      const agentToDelete = agents.find(a => a.id === id);
       
-      if (filteredAgents.length === agents.length) {
+      if (!agentToDelete) {
         throw new Error(`Agent with id ${id} not found`);
       }
 
-      await this.writeJSON('agents.json', filteredAgents);
+      // Verificar que el agente pertenece al tenant
+      if (agentToDelete.tenantId !== tenantId) {
+        throw new Error('Agent does not belong to this tenant');
+      }
+
+      const filteredAgents = agents.filter(a => a.id !== id);
+      await this.writeJSON(tenantId, 'agents', filteredAgents);
       return true;
     });
   }
 
   // ============ USO (ANGELITOS) ============
 
-  async getUsage(tenantId?: string) {
-    const usage = await this.readJSON<any>('usage.json');
-    if (tenantId && usage.tenantId !== tenantId) {
-      return {
-        tenantId,
-        period: new Date().toISOString().slice(0, 7),
-        summary: { totalMinutes: 0, totalCalls: 0, totalCost: 0, unit: 'angelitos' },
-        byType: {},
-        byAgent: [],
-        dailyUsage: [],
-      };
-    }
-    return usage;
+  async getUsage(tenantId: string) {
+    return this.readJSON<any>(tenantId, 'usage');
   }
 
   async updateUsage(tenantId: string, updates: any) {
-    return this.withLock('usage.json', async () => {
-      const usage = await this.readJSON<any>('usage.json');
+    return this.withLock(tenantId, 'usage', async () => {
+      const usage = await this.readJSON<any>(tenantId, 'usage');
       
       const updatedUsage = {
         ...usage,
@@ -191,24 +197,20 @@ class MockDataService {
         updatedAt: new Date().toISOString(),
       };
 
-      await this.writeJSON('usage.json', updatedUsage);
+      await this.writeJSON(tenantId, 'usage', updatedUsage);
       return updatedUsage;
     });
   }
 
   // ============ PLAN ============
 
-  async getPlan(tenantId?: string) {
-    const plan = await this.readJSON<any>('plan.json');
-    if (tenantId && plan.tenantId !== tenantId) {
-      return null;
-    }
-    return plan;
+  async getPlan(tenantId: string) {
+    return this.readJSON<any>(tenantId, 'plan');
   }
 
   async updatePlan(tenantId: string, newPlan: any) {
-    return this.withLock('plan.json', async () => {
-      const currentPlan = await this.readJSON<any>('plan.json');
+    return this.withLock(tenantId, 'plan', async () => {
+      const currentPlan = await this.readJSON<any>(tenantId, 'plan');
       
       const updatedPlan = {
         ...currentPlan,
@@ -217,24 +219,20 @@ class MockDataService {
         updatedAt: new Date().toISOString(),
       };
 
-      await this.writeJSON('plan.json', updatedPlan);
+      await this.writeJSON(tenantId, 'plan', updatedPlan);
       return updatedPlan;
     });
   }
 
   // ============ VOXAGENTAI ============
 
-  async getVoxAgentAIInteractions(tenantId?: string) {
-    const interactions = await this.readJSON<any[]>('voxagentai.json');
-    if (tenantId) {
-      return interactions.filter(i => i.tenantId === tenantId);
-    }
-    return interactions;
+  async getVoxAgentAIInteractions(tenantId: string) {
+    return this.readJSON<any[]>(tenantId, 'voxagentai');
   }
 
-  async addVoxAgentAIInteraction(interaction: any) {
-    return this.withLock('voxagentai.json', async () => {
-      const interactions = await this.readJSON<any[]>('voxagentai.json');
+  async addVoxAgentAIInteraction(tenantId: string, interaction: any) {
+    return this.withLock(tenantId, 'voxagentai', async () => {
+      const interactions = await this.readJSON<any[]>(tenantId, 'voxagentai');
       
       // Validar que no exista el ID
       if (interactions.some(i => i.id === interaction.id)) {
@@ -243,27 +241,24 @@ class MockDataService {
 
       interactions.push({
         ...interaction,
+        tenantId,
         timestamp: new Date().toISOString(),
       });
 
-      await this.writeJSON('voxagentai.json', interactions);
+      await this.writeJSON(tenantId, 'voxagentai', interactions);
       return interaction;
     });
   }
 
   // ============ PAGOS ============
 
-  async getPayments(tenantId?: string) {
-    const payments = await this.readJSON<any[]>('payments.json');
-    if (tenantId) {
-      return payments.filter(p => p.tenantId === tenantId);
-    }
-    return payments;
+  async getPayments(tenantId: string) {
+    return this.readJSON<any[]>(tenantId, 'payments');
   }
 
-  async addPayment(payment: any) {
-    return this.withLock('payments.json', async () => {
-      const payments = await this.readJSON<any[]>('payments.json');
+  async addPayment(tenantId: string, payment: any) {
+    return this.withLock(tenantId, 'payments', async () => {
+      const payments = await this.readJSON<any[]>(tenantId, 'payments');
       
       // Validar que no exista el ID
       if (payments.some(p => p.id === payment.id)) {
@@ -272,10 +267,11 @@ class MockDataService {
 
       payments.push({
         ...payment,
+        tenantId,
         createdAt: new Date().toISOString(),
       });
 
-      await this.writeJSON('payments.json', payments);
+      await this.writeJSON(tenantId, 'payments', payments);
       return payment;
     });
   }

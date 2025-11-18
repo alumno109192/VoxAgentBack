@@ -18,10 +18,10 @@
     "stats": {
       "totalCalls": 45,
       "totalMinutes": 123.5,
-      "lastUsed": "2025-11-17T10:30:00Z"
+      "lastUsed": "2025-11-18T10:30:00Z"
     },
     "createdAt": "2025-11-01T12:00:00Z",
-    "updatedAt": "2025-11-17T10:30:00Z"
+    "updatedAt": "2025-11-18T10:30:00Z"
   },
   {
     "id": "agent-002",
@@ -42,10 +42,10 @@
     "stats": {
       "totalCalls": 78,
       "totalMinutes": 234.8,
-      "lastUsed": "2025-11-17T11:15:00Z"
+      "lastUsed": "2025-11-18T11:15:00Z"
     },
     "createdAt": "2025-10-15T09:00:00Z",
-    "updatedAt": "2025-11-17T11:15:00Z"
+    "updatedAt": "2025-11-18T11:15:00Z"
   },
   {
     "id": "agent-003",
@@ -66,9 +66,26 @@
     "stats": {
       "totalCalls": 12,
       "totalMinutes": 45.2,
-      "lastUsed": "2025-11-16T15:00:00Z"
+      "lastUsed": "2025-11-17T15:00:00Z"
     },
     "createdAt": "2025-11-10T14:00:00Z",
-    "updatedAt": "2025-11-16T15:00:00Z"
+    "updatedAt": "2025-11-17T15:00:00Z"
+  },
+  {
+    "id": "agent-53d6c9ab",
+    "tenantId": "test-tenant-001",
+    "name": "Agente de Encuestas",
+    "description": "Realiza encuestas de satisfacción",
+    "voice": "es-ES-Standard-D",
+    "behavior": "encuestador",
+    "status": "active",
+    "configuration": {},
+    "stats": {
+      "totalCalls": 0,
+      "totalMinutes": 0,
+      "lastUsed": null
+    },
+    "createdAt": "2025-11-18T11:18:10.670Z",
+    "updatedAt": "2025-11-18T11:18:10.670Z"
   }
 ]

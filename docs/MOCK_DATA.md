@@ -1,122 +1,73 @@
-# 📁 Sistema Mock Data - Documentación
+# Sistema de Datos Mock
 
-## 🎯 Objetivo
+## Descripción
 
-Sistema de almacenamiento y gestión de datos simulados en archivos JSON separados, permitiendo probar el panel interno sin necesidad de MongoDB o lógica de producción completa.
+Este sistema permite gestionar datos simulados (mock) para desarrollo y demostración, almacenados en archivos JSON separados **por entidad y por tenant**.
 
-## 📂 Estructura de Archivos
+## Arquitectura de Archivos
 
-Todos los archivos mock se encuentran en `./data/mock/`:
+### Estructura de Almacenamiento
+
+Los datos se almacenan en `./data/mock/` con el siguiente patrón de nombres:
 
 ```
-data/mock/
-├── agents.json          # Agentes virtuales
-├── usage.json           # Consumo de minutos (angelitos)
-├── plan.json            # Plan actual del usuario
-├── voxagentai.json      # Interacciones con VoxAgentAI
-└── payments.json        # Historial de pagos
+{tipo}-{tenantId}.json
 ```
 
-## 🔧 Configuración
+Ejemplos:
+- `agents-test-tenant-001.json` - Agentes del tenant test-tenant-001
+- `usage-test-tenant-001.json` - Uso del tenant test-tenant-001
+- `plan-test-tenant-001.json` - Plan del tenant test-tenant-001
+- `voxagentai-test-tenant-001.json` - Interacciones VoxAgentAI del tenant test-tenant-001
+- `payments-test-tenant-001.json` - Pagos del tenant test-tenant-001
 
-### Variables de Entorno
+### Ventajas de Esta Arquitectura
 
-```env
-MOCK_DATA_PATH=./data/mock
-```
+1. **Aislamiento Real**: Cada tenant tiene sus propios archivos físicos
+2. **Escalabilidad**: No hay filtrado en memoria, lectura directa por tenant
+3. **Concurrencia**: Lock granular por `{tipo}-{tenantId}`
+4. **Simplicidad**: No hay arrays mezclados, estructura más clara
+5. **Multi-tenant Real**: Facilita testing con múltiples tenants
 
-## 🛠️ Endpoints Disponibles
+## Tipos de Datos
 
-### 🤖 Agentes Virtuales
+### 1. Agentes Virtuales (`agents-{tenantId}.json`)
 
-#### Listar Agentes
-```http
-GET /mock/agents?tenantId={tenantId}&status={status}
-Authorization: Bearer {token}
-```
+Array de agentes virtuales del tenant:
 
-**Respuesta:**
 ```json
-{
-  "agents": [
-    {
-      "id": "agent-001",
-      "tenantId": "test-tenant-001",
-      "name": "Agente Comercial",
-      "description": "Agente especializado en ventas",
-      "voice": "es-ES-Standard-A",
-      "behavior": "ventas",
-      "status": "active",
-      "configuration": { ... },
-      "stats": {
-        "totalCalls": 45,
-        "totalMinutes": 123.5,
-        "lastUsed": "2025-11-17T10:30:00Z"
-      },
-      "createdAt": "2025-11-01T12:00:00Z",
-      "updatedAt": "2025-11-17T10:30:00Z"
-    }
-  ],
-  "total": 3
-}
-```
-
-#### Obtener Agente
-```http
-GET /mock/agents/{id}
-Authorization: Bearer {token}
-```
-
-#### Crear Agente
-```http
-POST /mock/agents
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "tenantId": "test-tenant-001",
-  "name": "Nuevo Agente",
-  "description": "Descripción del agente",
-  "voice": "es-ES-Standard-B",
-  "behavior": "formal",
-  "configuration": {
-    "language": "es",
-    "temperature": 0.7
+[
+  {
+    "id": "agent-001",
+    "tenantId": "test-tenant-001",
+    "name": "Agente Comercial",
+    "description": "Agente especializado en ventas",
+    "voice": "es-ES-Standard-A",
+    "behavior": "ventas",
+    "status": "active",
+    "configuration": {
+      "language": "es",
+      "voiceId": "voice-friendly",
+      "temperature": 0.7,
+      "maxTokens": 500,
+      "welcomeMessage": "¡Hola! ¿En qué puedo ayudarte?",
+      "fallbackMessage": "Disculpa, no entendí bien."
+    },
+    "stats": {
+      "totalCalls": 45,
+      "totalMinutes": 123.5,
+      "lastUsed": "2025-11-18T10:30:00Z"
+    },
+    "createdAt": "2025-11-01T12:00:00Z",
+    "updatedAt": "2025-11-18T10:30:00Z"
   }
-}
+]
 ```
 
-**Respuesta:** Agente creado con ID único generado
+### 2. Uso - Angelitos (`usage-{tenantId}.json`)
 
-#### Actualizar Agente
-```http
-PUT /mock/agents/{id}
-Authorization: Bearer {token}
-Content-Type: application/json
+Objeto con resumen de uso del tenant:
 
-{
-  "name": "Nombre Actualizado",
-  "status": "inactive"
-}
-```
-
-#### Eliminar Agente
-```http
-DELETE /mock/agents/{id}
-Authorization: Bearer {token}
-```
-
----
-
-### 📊 Uso (Angelitos)
-
-#### Obtener Uso
-```http
-GET /mock/usage?tenantId={tenantId}
-Authorization: Bearer {token}
-```
-
-**Respuesta:**
 ```json
 {
   "tenantId": "test-tenant-001",
@@ -128,21 +79,9 @@ Authorization: Bearer {token}
     "unit": "angelitos"
   },
   "byType": {
-    "call": {
-      "minutes": 358.3,
-      "count": 135,
-      "cost": 17.92
-    },
-    "voxagentai": {
-      "minutes": 35.2,
-      "count": 48,
-      "cost": 1.76
-    },
-    "transcription": {
-      "minutes": 10.0,
-      "count": 25,
-      "cost": 0.50
-    }
+    "call": { "minutes": 358.3, "count": 135, "cost": 17.92 },
+    "voxagentai": { "minutes": 35.2, "count": 48, "cost": 1.76 },
+    "transcription": { "minutes": 10.0, "count": 25, "cost": 0.50 }
   },
   "byAgent": [
     {
@@ -154,24 +93,16 @@ Authorization: Bearer {token}
     }
   ],
   "dailyUsage": [
-    { "date": "2025-11-01", "minutes": 12.5, "calls": 4 },
-    { "date": "2025-11-02", "minutes": 18.3, "calls": 6 }
+    { "date": "2025-11-01", "minutes": 12.5, "calls": 4 }
   ],
-  "updatedAt": "2025-11-17T12:00:00Z"
+  "updatedAt": "2025-11-18T12:00:00Z"
 }
 ```
 
----
+### 3. Plan Contratado (`plan-{tenantId}.json`)
 
-### 💎 Plan
+Objeto con plan actual y uso del tenant:
 
-#### Obtener Plan Actual
-```http
-GET /mock/plan?tenantId={tenantId}
-Authorization: Bearer {token}
-```
-
-**Respuesta:**
 ```json
 {
   "tenantId": "test-tenant-001",
@@ -186,11 +117,9 @@ Authorization: Bearer {token}
       "maxStorageGB": 20,
       "voxagentaiQueries": 2000
     },
-    "pricing": {
-      "monthly": 99,
-      "yearly": 990,
-      "currency": "USD"
-    }
+    "features": ["20 agentes virtuales", "2,000 minutos/mes", ...],
+    "pricing": { "monthly": 99, "yearly": 990, "currency": "USD" },
+    "isActive": true
   },
   "usage": {
     "agentsCreated": 3,
@@ -203,274 +132,289 @@ Authorization: Bearer {token}
     "endDate": "2025-11-30T23:59:59Z",
     "nextBillingDate": "2025-12-01T00:00:00Z"
   },
-  "subscriptionStatus": "active"
+  "subscriptionStatus": "active",
+  "updatedAt": "2025-11-18T12:00:00Z"
 }
 ```
 
-#### Cambiar Plan
-```http
-POST /mock/plan/change
-Authorization: Bearer {token}
-Content-Type: application/json
+### 4. VoxAgentAI Interacciones (`voxagentai-{tenantId}.json`)
 
+Array de interacciones con VoxAgentAI del tenant:
+
+```json
+[
+  {
+    "id": "interaction-001",
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-001",
+    "query": "¿Cuál es el estado de mi pedido?",
+    "response": "Su pedido está en tránsito...",
+    "mode": "text",
+    "metadata": {
+      "tokens": 85,
+      "cost": 0.00085,
+      "duration": 1.2
+    },
+    "timestamp": "2025-11-18T10:15:00Z"
+  }
+]
+```
+
+### 5. Historial de Pagos (`payments-{tenantId}.json`)
+
+Array de pagos del tenant:
+
+```json
+[
+  {
+    "id": "pay-001",
+    "tenantId": "test-tenant-001",
+    "amount": 99.00,
+    "currency": "USD",
+    "type": "subscription",
+    "description": "Plan Professional - Noviembre 2025",
+    "status": "completed",
+    "paymentMethod": "credit_card",
+    "cardLast4": "4242",
+    "createdAt": "2025-11-01T00:00:00Z",
+    "paidAt": "2025-11-01T00:05:23Z"
+  }
+]
+```
+
+## Endpoints
+
+Todos los endpoints requieren autenticación JWT (header `Authorization: Bearer {token}`).
+
+### Agentes
+
+```bash
+# Obtener todos los agentes
+GET /mock/agents?tenantId={tenantId}
+
+# Obtener agente por ID
+GET /mock/agents/{id}?tenantId={tenantId}
+
+# Crear agente
+POST /mock/agents
 {
   "tenantId": "test-tenant-001",
-  "newPlan": {
-    "id": "plan-enterprise",
-    "name": "Plan Enterprise",
-    "tier": "enterprise"
-  }
+  "name": "Nuevo Agente",
+  "description": "Descripción",
+  "voice": "es-ES-Standard-A",
+  "behavior": "ventas",
+  "status": "active"
 }
-```
 
----
-
-### 🎙️ VoxAgentAI
-
-#### Listar Interacciones
-```http
-GET /mock/voxagentai?tenantId={tenantId}
-Authorization: Bearer {token}
-```
-
-**Respuesta:**
-```json
+# Actualizar agente
+PUT /mock/agents/{id}
 {
-  "interactions": [
-    {
-      "id": "interaction-001",
-      "tenantId": "test-tenant-001",
-      "agentId": "agent-001",
-      "query": "¿Cuál es el estado de mi pedido?",
-      "response": "Su pedido está en tránsito...",
-      "mode": "text",
-      "metadata": {
-        "tokens": 85,
-        "cost": 0.00085,
-        "duration": 1.2
-      },
-      "timestamp": "2025-11-17T10:15:00Z"
-    }
-  ],
-  "total": 5
+  "tenantId": "test-tenant-001",
+  "name": "Nombre actualizado"
+}
+
+# Eliminar agente
+DELETE /mock/agents/{id}?tenantId={tenantId}
+```
+
+### Uso (Angelitos)
+
+```bash
+# Obtener resumen de uso
+GET /mock/usage?tenantId={tenantId}
+```
+
+### Plan
+
+```bash
+# Obtener plan actual
+GET /mock/plan?tenantId={tenantId}
+
+# Cambiar plan
+POST /mock/plan/change
+{
+  "tenantId": "test-tenant-001",
+  "newPlan": "enterprise"
 }
 ```
 
-#### Realizar Consulta
-```http
-POST /mock/voxagentai/query
-Authorization: Bearer {token}
-Content-Type: application/json
+### VoxAgentAI
 
+```bash
+# Obtener historial de interacciones
+GET /mock/voxagentai?tenantId={tenantId}
+
+# Realizar consulta
+POST /mock/voxagentai/query
 {
   "tenantId": "test-tenant-001",
   "agentId": "agent-001",
-  "query": "¿Cuál es el horario de atención?",
+  "query": "Tu pregunta aquí",
   "mode": "text"
 }
 ```
 
-**Respuesta:**
-```json
-{
-  "response": "Basándome en tu consulta, aquí está la información...",
-  "mode": "text",
-  "metadata": {
-    "tokens": 75,
-    "cost": 0.00075,
-    "duration": 1.1
-  }
-}
-```
+### Pagos
 
----
-
-### 💳 Pagos
-
-#### Listar Pagos
-```http
+```bash
+# Obtener historial de pagos
 GET /mock/payments?tenantId={tenantId}
-Authorization: Bearer {token}
 ```
 
-**Respuesta:**
-```json
-{
-  "payments": [
-    {
-      "id": "pay-001",
-      "tenantId": "test-tenant-001",
-      "amount": 99.00,
-      "currency": "USD",
-      "type": "subscription",
-      "description": "Plan Professional - Noviembre 2025",
-      "status": "completed",
-      "paymentMethod": "credit_card",
-      "cardLast4": "4242",
-      "createdAt": "2025-11-01T00:00:00Z",
-      "paidAt": "2025-11-01T00:05:23Z"
-    }
-  ],
-  "total": 4
-}
+## Ejemplos de Uso
+
+### 1. Autenticación
+
+```bash
+# Login
+TOKEN=$(curl -s -X POST http://localhost:4000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","password":"Admin123!"}' \
+  | jq -r '.accessToken')
 ```
 
----
+### 2. Consultar Agentes
 
-## 🔒 Características de Seguridad
-
-### Escritura Atómica
-- Todos los archivos se escriben primero en archivos temporales (`.tmp`)
-- Se renombran atómicamente al archivo final
-- Evita corrupción de datos en caso de fallos
-
-### Lock de Archivos
-- Sistema de locks en memoria para evitar condiciones de carrera
-- Operaciones serializadas por archivo
-- Garantiza consistencia en escrituras concurrentes
-
-### Validación de Duplicados
-- Verifica IDs únicos antes de insertar
-- Evita duplicación de datos
-- Retorna errores claros en caso de conflicto
-
-### Autorización
-- Todos los endpoints requieren JWT
-- Validación de permisos por tenant
-- Admin puede ver todos los datos, usuarios solo los suyos
-
----
-
-## 📈 Casos de Uso
-
-### Dashboard con Datos Mock
-
-```javascript
-// 1. Login
-const { accessToken } = await fetch('/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'admin@example.com',
-    password: 'Admin123!'
-  })
-}).then(r => r.json());
-
-// 2. Obtener datos mock
-const agents = await fetch('/mock/agents?tenantId=test-tenant-001', {
-  headers: { 'Authorization': `Bearer ${accessToken}` }
-}).then(r => r.json());
-
-const usage = await fetch('/mock/usage?tenantId=test-tenant-001', {
-  headers: { 'Authorization': `Bearer ${accessToken}` }
-}).then(r => r.json());
-
-const plan = await fetch('/mock/plan?tenantId=test-tenant-001', {
-  headers: { 'Authorization': `Bearer ${accessToken}` }
-}).then(r => r.json());
-
-const voxagentai = await fetch('/mock/voxagentai?tenantId=test-tenant-001', {
-  headers: { 'Authorization': `Bearer ${accessToken}` }
-}).then(r => r.json());
+```bash
+curl -s "http://localhost:4000/mock/agents?tenantId=test-tenant-001" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.agents[] | {id, name, status}'
 ```
 
-### Crear Agente y Consultar VoxAgentAI
+### 3. Crear Nuevo Agente
 
-```javascript
-// 1. Crear agente
-const newAgent = await fetch('/mock/agents', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    tenantId: 'test-tenant-001',
-    name: 'Agente de Soporte',
-    description: 'Atención al cliente',
-    voice: 'es-ES-Standard-A',
-    behavior: 'amable'
-  })
-}).then(r => r.json());
-
-// 2. Consultar VoxAgentAI con el nuevo agente
-const aiResponse = await fetch('/mock/voxagentai/query', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    tenantId: 'test-tenant-001',
-    agentId: newAgent.id,
-    query: '¿Cómo puedo ayudarte?',
-    mode: 'text'
-  })
-}).then(r => r.json());
+```bash
+curl -s -X POST "http://localhost:4000/mock/agents" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "name": "Agente de Soporte",
+    "description": "Atiende consultas de soporte técnico",
+    "voice": "es-ES-Standard-B",
+    "behavior": "técnico",
+    "status": "active"
+  }' | jq '.'
 ```
 
----
+### 4. Ver Uso del Mes
 
-## 🚀 Ventajas
+```bash
+curl -s "http://localhost:4000/mock/usage?tenantId=test-tenant-001" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.summary'
+```
 
-✅ **Sin dependencias externas**: No requiere MongoDB ni APIs de terceros
-✅ **Pruebas rápidas**: Datos instantáneos para demos y desarrollo
-✅ **Control total**: Modifica los JSON directamente si es necesario
-✅ **Migración fácil**: Misma estructura que endpoints reales
-✅ **Seguro**: Escritura atómica y locks previenen corrupción
-✅ **Realista**: Datos de ejemplo completos y coherentes
+### 5. Consultar VoxAgentAI
 
----
+```bash
+curl -s -X POST "http://localhost:4000/mock/voxagentai/query" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tenantId": "test-tenant-001",
+    "agentId": "agent-001",
+    "query": "¿Cuáles son los horarios de atención?",
+    "mode": "text"
+  }' | jq '.'
+```
 
-## 🔄 Migración a Producción
+## Implementación Técnica
 
-Cuando estés listo para producción, simplemente:
+### Servicio: `mockDataService.ts`
 
-1. Cambia los endpoints del frontend de `/mock/*` a los endpoints reales
-2. Los datos reales vienen de MongoDB
-3. Los archivos mock siguen disponibles para testing
+Gestiona operaciones de lectura/escritura con:
 
-```javascript
-// Desarrollo (mock)
-const API_BASE = '/mock';
+- **Atomicidad**: Escrituras atómicas con archivo temporal + rename
+- **Concurrencia**: Sistema de locks por `{tipo}-{tenantId}`
+- **Aislamiento**: Archivos separados por tenant, sin filtrado en memoria
+- **Validación**: Verificación de pertenencia de datos al tenant
 
-// Producción (real)
-const API_BASE = '';
+### Métodos Principales
+
+```typescript
+// Agentes
+getAgents(tenantId: string)
+getAgentById(tenantId: string, id: string)
+createAgent(tenantId: string, agent: any)
+updateAgent(tenantId: string, id: string, updates: any)
+deleteAgent(tenantId: string, id: string)
 
 // Uso
-fetch(`${API_BASE}/agents?tenantId=xxx`)
+getUsage(tenantId: string)
+addUsage(tenantId: string, usage: any)
+
+// Plan
+getPlan(tenantId: string)
+updatePlan(tenantId: string, plan: any)
+
+// VoxAgentAI
+getVoxAgentAIInteractions(tenantId: string)
+addVoxAgentAIInteraction(tenantId: string, interaction: any)
+
+// Pagos
+getPayments(tenantId: string)
+addPayment(tenantId: string, payment: any)
 ```
 
----
+## Testing Multi-Tenant
 
-## 📝 Notas Importantes
+Para probar con múltiples tenants:
 
-- **Solo para desarrollo/demo**: No usar en producción real
-- **Autenticación requerida**: Todos los endpoints requieren JWT válido
-- **Datos persistentes**: Los archivos JSON se actualizan en disco
-- **Reset manual**: Para resetear datos, restaura los JSON desde backup
-- **Performance**: Adecuado para demos, no para miles de registros
-
----
-
-## 🔧 Mantenimiento
-
-### Backup de Datos Mock
 ```bash
-cp -r data/mock data/mock.backup
+# Crear datos para otro tenant
+mkdir -p data/mock
+cp data/mock/agents-test-tenant-001.json data/mock/agents-tenant-456.json
+
+# Editar el archivo y cambiar todos los tenantId a "tenant-456"
+
+# Probar aislamiento
+curl -s "http://localhost:4000/mock/agents?tenantId=tenant-456" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-### Restaurar Datos Mock
+## Notas de Migración
+
+Si tienes datos en el formato antiguo (archivos únicos con arrays filtrados):
+
+1. **Backup**: Copia los archivos antiguos
+2. **Separar por tenant**: Filtra arrays por tenantId
+3. **Crear nuevos archivos**: Guarda cada tenant en su propio archivo
+4. **Verificar**: Prueba endpoints para confirmar funcionamiento
+5. **Eliminar antiguos**: Borra archivos con formato antiguo
+
 ```bash
-rm -rf data/mock
-cp -r data/mock.backup data/mock
+# Ejemplo de separación manual
+jq '[.[] | select(.tenantId == "test-tenant-001")]' agents.json > agents-test-tenant-001.json
 ```
 
-### Verificar Integridad
-```bash
-# Validar JSON
-for file in data/mock/*.json; do
-  echo "Validating $file"
-  jq empty "$file" && echo "✓ Valid" || echo "✗ Invalid"
-done
+## Troubleshooting
+
+### "No se encuentran datos"
+- Verifica que existe el archivo `{tipo}-{tenantId}.json`
+- Verifica que el tenantId en la consulta coincide con el del archivo
+
+### "Error al escribir"
+- Verifica permisos de escritura en `./data/mock/`
+- Verifica que no hay procesos bloqueando el archivo
+
+### "Datos de otro tenant"
+- Verifica que el tenantId en el request es correcto
+- Verifica que los datos en el archivo tienen el tenantId correcto
+
+## Logs
+
+El sistema registra todas las operaciones:
+
 ```
+[info] Reading mock data from agents-test-tenant-001.json
+[info] Writing mock data to agents-test-tenant-001.json
+[warn] Agent agent-003 does not belong to tenant test-tenant-002
+```
+
+## Seguridad
+
+- Todos los endpoints requieren JWT válido
+- El tenantId se valida contra el usuario autenticado
+- Las operaciones de escritura verifican propiedad de los datos
+- No se permite acceso a datos de otros tenants

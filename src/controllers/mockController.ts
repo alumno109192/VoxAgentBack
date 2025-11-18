@@ -10,6 +10,11 @@ export const getMockAgents = async (req: AuthRequest, res: Response) => {
   try {
     const { tenantId, status } = req.query;
 
+    if (!tenantId) {
+      res.status(400).json({ error: 'tenantId is required' });
+      return;
+    }
+
     // Verificar autorización
     if (req.role !== 'admin' && req.tenantId !== tenantId) {
       res.status(403).json({ error: 'Forbidden' });
@@ -33,16 +38,23 @@ export const getMockAgents = async (req: AuthRequest, res: Response) => {
 export const getMockAgentById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const agent = await mockDataService.getAgentById(id);
+    const { tenantId } = req.query;
 
-    if (!agent) {
-      res.status(404).json({ error: 'Agent not found' });
+    if (!tenantId) {
+      res.status(400).json({ error: 'tenantId is required' });
       return;
     }
 
     // Verificar autorización
-    if (req.role !== 'admin' && req.tenantId !== agent.tenantId) {
+    if (req.role !== 'admin' && req.tenantId !== tenantId) {
       res.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+
+    const agent = await mockDataService.getAgentById(tenantId as string, id);
+
+    if (!agent) {
+      res.status(404).json({ error: 'Agent not found' });
       return;
     }
 
@@ -84,8 +96,8 @@ export const createMockAgent = async (req: AuthRequest, res: Response) => {
       },
     };
 
-    const agent = await mockDataService.createAgent(newAgent);
-    logger.info(`Mock agent created: ${agent.id}`);
+    const agent = await mockDataService.createAgent(tenantId, newAgent);
+    logger.info(`Mock agent created: ${agent.id} for tenant ${tenantId}`);
 
     res.status(201).json(agent);
   } catch (error) {
@@ -97,9 +109,15 @@ export const createMockAgent = async (req: AuthRequest, res: Response) => {
 export const updateMockAgent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { tenantId } = req.body;
     const updates = req.body;
 
-    const existingAgent = await mockDataService.getAgentById(id);
+    if (!tenantId) {
+      res.status(400).json({ error: 'tenantId is required' });
+      return;
+    }
+
+    const existingAgent = await mockDataService.getAgentById(tenantId, id);
     if (!existingAgent) {
       res.status(404).json({ error: 'Agent not found' });
       return;
@@ -111,8 +129,8 @@ export const updateMockAgent = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const updatedAgent = await mockDataService.updateAgent(id, updates);
-    logger.info(`Mock agent updated: ${id}`);
+    const updatedAgent = await mockDataService.updateAgent(tenantId, id, updates);
+    logger.info(`Mock agent updated: ${id} for tenant ${tenantId}`);
 
     res.json(updatedAgent);
   } catch (error) {
@@ -124,21 +142,27 @@ export const updateMockAgent = async (req: AuthRequest, res: Response) => {
 export const deleteMockAgent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { tenantId } = req.query;
 
-    const existingAgent = await mockDataService.getAgentById(id);
+    if (!tenantId) {
+      res.status(400).json({ error: 'tenantId is required' });
+      return;
+    }
+
+    const existingAgent = await mockDataService.getAgentById(tenantId as string, id);
     if (!existingAgent) {
       res.status(404).json({ error: 'Agent not found' });
       return;
     }
 
     // Verificar autorización
-    if (req.role !== 'admin' && req.tenantId !== existingAgent.tenantId) {
+    if (req.role !== 'admin' && req.tenantId !== tenantId) {
       res.status(403).json({ error: 'Forbidden' });
       return;
     }
 
-    await mockDataService.deleteAgent(id);
-    logger.info(`Mock agent deleted: ${id}`);
+    await mockDataService.deleteAgent(tenantId as string, id);
+    logger.info(`Mock agent deleted: ${id} for tenant ${tenantId}`);
 
     res.json({ message: 'Agent deleted successfully' });
   } catch (error) {
@@ -165,6 +189,20 @@ export const getMockUsage = async (req: AuthRequest, res: Response) => {
     }
 
     const usage = await mockDataService.getUsage(tenantId as string);
+    
+    // Si no hay datos, retornar estructura vacía
+    if (!usage || Object.keys(usage).length === 0) {
+      res.json({
+        tenantId,
+        period: new Date().toISOString().slice(0, 7),
+        summary: { totalMinutes: 0, totalCalls: 0, totalCost: 0, unit: 'angelitos' },
+        byType: {},
+        byAgent: [],
+        dailyUsage: [],
+      });
+      return;
+    }
+    
     res.json(usage);
   } catch (error) {
     logger.error('Error getting mock usage:', error);
@@ -191,8 +229,14 @@ export const getMockPlan = async (req: AuthRequest, res: Response) => {
 
     const plan = await mockDataService.getPlan(tenantId as string);
     
-    if (!plan) {
-      res.status(404).json({ error: 'Plan not found' });
+    // Si no hay datos, retornar estructura básica
+    if (!plan || Object.keys(plan).length === 0) {
+      res.json({
+        tenantId,
+        currentPlan: null,
+        usage: {},
+        subscriptionStatus: 'inactive',
+      });
       return;
     }
 
@@ -294,7 +338,7 @@ export const queryMockVoxAgentAI = async (req: AuthRequest, res: Response) => {
       },
     };
 
-    await mockDataService.addVoxAgentAIInteraction(interaction);
+    await mockDataService.addVoxAgentAIInteraction(tenantId, interaction);
     logger.info(`Mock VoxAgentAI query processed for tenant: ${tenantId}`);
 
     res.json({
