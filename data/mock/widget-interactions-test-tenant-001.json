@@ -59,5 +59,69 @@
       "ipAddress": "::1"
     },
     "timestamp": "2025-11-18T11:54:53.134Z"
+  },
+  {
+    "id": "widget-int-1763543367116-qoez2tnf2",
+    "tenantId": "test-tenant-001",
+    "sessionId": "demo-session-001",
+    "query": "¿Cuál es el horario de atención?",
+    "response": "Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 horas.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 26,
+      "cost": 0.00026000000000000003,
+      "duration": 2.1873802815511305,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T09:09:27.116Z"
+  },
+  {
+    "id": "widget-int-1763543367210-00vt7vwxv",
+    "tenantId": "test-tenant-001",
+    "sessionId": "demo-session-001",
+    "query": "¿Tienen planes de precios disponibles?",
+    "response": "Ofrecemos varios planes adaptados a tus necesidades. ¿Te gustaría conocer más detalles sobre algún plan específico?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 37,
+      "cost": 0.00037000000000000005,
+      "duration": 0.7385572090391328,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T09:09:27.210Z"
+  },
+  {
+    "id": "widget-int-1763543367638-rsmr7jtf7",
+    "tenantId": "test-tenant-001",
+    "sessionId": "demo-session-001",
+    "query": "¿Cuál es el horario de atención?",
+    "response": "Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 horas.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 26,
+      "cost": 0.00026000000000000003,
+      "duration": 0.6007261446255092,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T09:09:27.638Z"
+  },
+  {
+    "id": "widget-int-1763543367671-nnm9ghauj",
+    "tenantId": "test-tenant-001",
+    "sessionId": "demo-session-001",
+    "query": "¿Tienen planes de precios disponibles?",
+    "response": "Ofrecemos varios planes adaptados a tus necesidades. ¿Te gustaría conocer más detalles sobre algún plan específico?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 37,
+      "cost": 0.00037000000000000005,
+      "duration": 1.3824631513259122,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T09:09:27.671Z"
   }
 ]
