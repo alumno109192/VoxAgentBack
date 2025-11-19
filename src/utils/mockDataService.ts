@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import * as fsSync from 'fs';
 import path from 'path';
 import logger from './logger';
 
@@ -364,6 +365,72 @@ class MockDataService {
       return interactions.filter(i => new Date(i.timestamp) >= since).length;
     } catch (error) {
       return 0;
+    }
+  }
+
+  // === Transcription Methods ===
+  async getTranscriptionSession(tenantId: string, sessionId: string): Promise<any | null> {
+    try {
+      return await this.readJSON<any>(tenantId, `transcription-${sessionId}`);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async addTranscriptionSegment(tenantId: string, sessionId: string, segment: any): Promise<any> {
+    return this.withLock(tenantId, `transcription-${sessionId}`, async () => {
+      let session: any;
+      try {
+        session = await this.readJSON<any>(tenantId, `transcription-${sessionId}`);
+      } catch (error) {
+        // Create new session
+        session = {
+          sessionId,
+          tenantId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          segments: [],
+          totalDuration: 0,
+          totalCost: 0,
+          totalWords: 0
+        };
+      }
+
+      session.segments.push(segment);
+      session.updatedAt = new Date().toISOString();
+      session.totalDuration = (session.totalDuration || 0) + (segment.duration || 0);
+      session.totalCost = (session.totalCost || 0) + (segment.metadata?.cost || 0);
+      session.totalWords = (session.totalWords || 0) + (segment.metadata?.words?.length || 0);
+
+      await this.writeJSON(tenantId, `transcription-${sessionId}`, session);
+      return segment;
+    });
+  }
+
+  async getTranscriptionHistory(tenantId: string, limit?: number): Promise<any[]> {
+    try {
+      const tenantDir = path.join(this.dataPath, tenantId);
+      
+      if (!fsSync.existsSync(tenantDir)) {
+        return [];
+      }
+
+      const files = fsSync.readdirSync(tenantDir)
+        .filter((f: string) => f.startsWith('transcription-') && f.endsWith('.json'))
+        .map((f: string) => {
+          const filePath = path.join(tenantDir, f);
+          const stats = fsSync.statSync(filePath);
+          const content = JSON.parse(fsSync.readFileSync(filePath, 'utf-8'));
+          return {
+            ...content,
+            lastModified: stats.mtime
+          };
+        })
+        .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+      return limit ? files.slice(0, limit) : files;
+    } catch (error) {
+      return [];
     }
   }
 }

@@ -1,0 +1,89 @@
+{
+  "sessionId": "session-test",
+  "tenantId": "tenant-001",
+  "createdAt": "2024-01-15T10:00:00.000Z",
+  "updatedAt": "2024-01-15T10:05:30.000Z",
+  "segments": [
+    {
+      "id": "seg-001",
+      "sessionId": "session-test",
+      "tenantId": "tenant-001",
+      "text": "Hola, buenos días. ¿Cómo puedo ayudarte hoy?",
+      "confidence": 0.96,
+      "duration": 3.5,
+      "timestamp": "2024-01-15T10:00:00.000Z",
+      "metadata": {
+        "audioSize": 52400,
+        "format": "webm",
+        "engine": "vapi-mock",
+        "cost": 0.00035,
+        "confidence": 0.96,
+        "duration": 3.5,
+        "words": [
+          { "text": "Hola", "start": 0.0, "end": 0.4, "confidence": 0.98 },
+          { "text": "buenos", "start": 0.5, "end": 0.9, "confidence": 0.97 },
+          { "text": "días", "start": 1.0, "end": 1.4, "confidence": 0.96 },
+          { "text": "¿Cómo", "start": 1.6, "end": 1.9, "confidence": 0.95 },
+          { "text": "puedo", "start": 2.0, "end": 2.3, "confidence": 0.96 },
+          { "text": "ayudarte", "start": 2.4, "end": 2.9, "confidence": 0.95 },
+          { "text": "hoy?", "start": 3.0, "end": 3.5, "confidence": 0.97 }
+        ]
+      }
+    },
+    {
+      "id": "seg-002",
+      "sessionId": "session-test",
+      "tenantId": "tenant-001",
+      "text": "Necesito información sobre sus horarios de atención.",
+      "confidence": 0.94,
+      "duration": 4.2,
+      "timestamp": "2024-01-15T10:02:15.000Z",
+      "metadata": {
+        "audioSize": 63000,
+        "format": "webm",
+        "engine": "vapi-mock",
+        "cost": 0.00042,
+        "confidence": 0.94,
+        "duration": 4.2,
+        "words": [
+          { "text": "Necesito", "start": 0.0, "end": 0.6, "confidence": 0.96 },
+          { "text": "información", "start": 0.7, "end": 1.5, "confidence": 0.93 },
+          { "text": "sobre", "start": 1.6, "end": 1.9, "confidence": 0.95 },
+          { "text": "sus", "start": 2.0, "end": 2.2, "confidence": 0.94 },
+          { "text": "horarios", "start": 2.3, "end": 2.9, "confidence": 0.92 },
+          { "text": "de", "start": 3.0, "end": 3.1, "confidence": 0.96 },
+          { "text": "atención", "start": 3.2, "end": 4.2, "confidence": 0.94 }
+        ]
+      }
+    },
+    {
+      "id": "seg-003",
+      "sessionId": "session-test",
+      "tenantId": "tenant-001",
+      "text": "¿Tienen disponibilidad para mañana por la tarde?",
+      "confidence": 0.92,
+      "duration": 3.8,
+      "timestamp": "2024-01-15T10:05:30.000Z",
+      "metadata": {
+        "audioSize": 57000,
+        "format": "webm",
+        "engine": "vapi-mock",
+        "cost": 0.00038,
+        "confidence": 0.92,
+        "duration": 3.8,
+        "words": [
+          { "text": "¿Tienen", "start": 0.0, "end": 0.5, "confidence": 0.94 },
+          { "text": "disponibilidad", "start": 0.6, "end": 1.6, "confidence": 0.89 },
+          { "text": "para", "start": 1.7, "end": 2.0, "confidence": 0.95 },
+          { "text": "mañana", "start": 2.1, "end": 2.6, "confidence": 0.93 },
+          { "text": "por", "start": 2.7, "end": 2.9, "confidence": 0.94 },
+          { "text": "la", "start": 3.0, "end": 3.1, "confidence": 0.96 },
+          { "text": "tarde?", "start": 3.2, "end": 3.8, "confidence": 0.91 }
+        ]
+      }
+    }
+  ],
+  "totalDuration": 11.5,
+  "totalCost": 0.00115,
+  "totalWords": 21
+}

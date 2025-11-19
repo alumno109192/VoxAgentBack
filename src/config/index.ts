@@ -29,6 +29,12 @@ interface Config {
     tokenCacheTTL: number;
     baseUrl: string;
   };
+  vapi: {
+    apiUrl: string;
+    publicKey: string;
+    assistantId: string;
+    apiKey?: string; // Private key para server-side
+  };
   sendgrid: {
     apiKey: string;
     fromEmail: string;
@@ -111,6 +117,13 @@ const config: Config = {
     webhookSecret: process.env.BLAND_WEBHOOK_SECRET || '',
     tokenCacheTTL: parseInt(process.env.BLAND_TOKEN_CACHE_TTL || '300', 10),
     baseUrl: process.env.BLAND_API_BASE_URL || 'https://api.bland.ai/v1',
+  },
+
+  vapi: {
+    apiUrl: process.env.VAPI_API_URL || 'https://api.vapi.ai',
+    publicKey: process.env.VAPI_PUBLIC_KEY || 'a8e14149-23ab-405d-afb9-b0889aa1f58c',
+    assistantId: process.env.VAPI_ASSISTANT_ID || '901c39a3-a56f-4554-8d75-fb41d0c83e11',
+    apiKey: process.env.VAPI_API_KEY, // Optional private key
   },
 
   sendgrid: {

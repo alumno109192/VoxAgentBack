@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo VAPI Widget - VoxAgent</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .info-box {
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .info-box h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    .info-box p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .credentials {
+      background: #fff;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .credentials h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+
+    .credential-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+
+    .credential-label {
+      font-weight: 600;
+      color: #667eea;
+      min-width: 140px;
+    }
+
+    .credential-value {
+      font-family: 'Courier New', monospace;
+      color: #495057;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    .instructions {
+      background: #fff;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .instructions h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+
+    .instructions ol {
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 20px 0;
+    }
+
+    .code-block .comment {
+      color: #5c6370;
+    }
+
+    .code-block .tag {
+      color: #e06c75;
+    }
+
+    .code-block .attr {
+      color: #d19a66;
+    }
+
+    .code-block .string {
+      color: #98c379;
+    }
+
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .button-secondary {
+      background: #6c757d;
+    }
+
+    .button-secondary:hover {
+      box-shadow: 0 10px 20px rgba(108, 117, 125, 0.4);
+    }
+
+    .footer {
+      background: #f8f9fa;
+      padding: 20px 40px;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎤 VAPI Widget Demo</h1>
+      <p>Asistente de Voz con IA - VoxAgent</p>
+      <div style="margin-top: 15px;">
+        <span class="status active">✓ Configurado</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="info-box">
+        <h3>📱 Widget Embebible</h3>
+        <p>Este es un ejemplo de cómo integrar el widget de VAPI en tu sitio web. El widget permite a tus usuarios hablar directamente con tu asistente de voz con IA.</p>
+        <p><strong>Funcionalidades:</strong></p>
+        <ul style="padding-left: 20px; color: #666;">
+          <li>🎙️ Grabación de voz en tiempo real</li>
+          <li>🤖 Respuestas inteligentes con IA</li>
+          <li>📝 Transcripción automática</li>
+          <li>🌐 Embebible en cualquier página web</li>
+        </ul>
+      </div>
+
+      <div class="credentials">
+        <h3>🔑 Credenciales VAPI (Ya Configuradas)</h3>
+        <div class="credential-item">
+          <span class="credential-label">Public Key:</span>
+          <span class="credential-value">a8e14149-23ab-405d-afb9-b0889aa1f58c</span>
+        </div>
+        <div class="credential-item">
+          <span class="credential-label">Assistant ID:</span>
+          <span class="credential-value">901c39a3-a56f-4554-8d75-fb41d0c83e11</span>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h3>🚀 Cómo Usar</h3>
+        <ol>
+          <li>Haz clic en el botón del micrófono que aparece en la esquina inferior derecha</li>
+          <li>Permite el acceso al micrófono cuando el navegador lo solicite</li>
+          <li>Habla con el asistente de voz</li>
+          <li>El asistente responderá automáticamente</li>
+          <li>Las transcripciones se guardan en el backend</li>
+        </ol>
+      </div>
+
+      <div class="code-block">
+<span class="comment">&lt;!-- Código de integración --&gt;</span>
+<span class="tag">&lt;vapi-widget</span>
+  <span class="attr">assistant-id</span>=<span class="string">"901c39a3-a56f-4554-8d75-fb41d0c83e11"</span>
+  <span class="attr">public-key</span>=<span class="string">"a8e14149-23ab-405d-afb9-b0889aa1f58c"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/vapi-widget&gt;</span>
+
+<span class="tag">&lt;script</span>
+  <span class="attr">src</span>=<span class="string">"https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"</span>
+  <span class="attr">async</span>
+  <span class="attr">type</span>=<span class="string">"text/javascript"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/script&gt;</span>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="vapi-widget-advanced.html" class="button">
+          Ver Ejemplo Avanzado →
+        </a>
+        <a href="../docs/VAPI_INTEGRATION.md" class="button button-secondary" style="margin-left: 10px;">
+          📚 Documentación
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>VoxAgent Backend · Integración VAPI · 2025</p>
+    </div>
+  </div>
+
+  <!-- VAPI Widget Integration -->
+  <vapi-widget 
+    assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
+    public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+  </vapi-widget>
+
+  <script
+    src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
+    async
+    type="text/javascript">
+  </script>
+</body>
+</html>

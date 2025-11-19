@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import path from 'path';
 import config from './config';
 import logger from './utils/logger';
 import { requestId } from './middleware/requestId';
@@ -25,6 +26,7 @@ import voxagentaiRoutes from './routes/voxagentai';
 import mockRoutes from './routes/mock';
 import widgetRoutes from './routes/widget';
 import widgetMockRoutes from './routes/widgetMock';
+import transcriptionRoutes from './routes/transcription';
 
 const app: Application = express();
 
@@ -99,6 +101,13 @@ app.use((req, _res, next) => {
 // Routes
 app.use('/health', healthRoutes);
 
+// Servir archivos estáticos (demos y ejemplos)
+if (config.env === 'development') {
+  const examplesPath = path.join(__dirname, '..', 'examples');
+  app.use('/examples', express.static(examplesPath));
+  logger.info('Serving static examples from:', { path: examplesPath });
+}
+
 // Public endpoints (with /auth prefix as per spec)
 app.use('/auth', authRoutes);
 
@@ -107,6 +116,9 @@ app.use('/webhooks', webhookRoutes);
 
 // Widget endpoints (public with API Key validation)
 app.use('/widget', widgetRoutes);
+
+// Transcription endpoints (mixed auth: API Key for upload, JWT for admin)
+app.use('/transcription', transcriptionRoutes);
 
 // Protected endpoints for panel interno (require JWT)
 app.use('/calls', callsRoutes);
@@ -131,12 +143,33 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/billing', billingRoutes);
 
-// Swagger documentation
+// Swagger documentation (OpenAPI 3.0)
 if (config.env !== 'production') {
   const swaggerUi = require('swagger-ui-express');
   const swaggerSpec = require('./docs/swagger');
   
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  // Swagger UI options
+  const swaggerOptions = {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'VoiceTotem Studio API Docs',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      tryItOutEnabled: true,
+    },
+  };
+  
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec.default || swaggerSpec, swaggerOptions));
+  
+  // Endpoint para obtener el spec JSON directamente
+  app.get('/docs/swagger.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec.default || swaggerSpec);
+  });
+  
+  logger.info('📘 Swagger UI available at /docs');
 }
 
 // 404 handler

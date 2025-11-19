@@ -2,6 +2,32 @@
 
 Backend profesional para Asistente de Voz médico con integración **Bland Voice**, diseñado para atención médica, transcripción de dictados y gestión multi-tenant.
 
+---
+
+## 📘 Documentación Actualizada
+
+> **🆕 NUEVO: Documentación completa de API y OpenAPI/Swagger implementado**
+
+### 🔥 Inicio Rápido
+- **[DOCS_INDEX.md](./DOCS_INDEX.md)** - 📚 Índice completo de toda la documentación
+- **[RESUMEN_ENDPOINTS_OPENAPI.md](./RESUMEN_ENDPOINTS_OPENAPI.md)** - ⭐ Resumen de implementación (empezar aquí)
+
+### 📖 Documentación de API
+- **[docs/API_ENDPOINTS.md](./docs/API_ENDPOINTS.md)** - 📋 **61 endpoints documentados** con ejemplos
+- **[docs/OPENAPI_GUIDE.md](./docs/OPENAPI_GUIDE.md)** - 🧰 Guía completa de Swagger/OpenAPI
+- **Swagger UI** - 🌐 http://localhost:4000/docs (documentación interactiva)
+
+### 🚀 Scripts Rápidos
+```bash
+# Abrir Swagger UI (documentación interactiva)
+./scripts/start-swagger.sh
+
+# Abrir demos del widget VAPI
+./scripts/start-with-demos.sh
+```
+
+---
+
 ## 🚀 Características
 
 ### Panel Interno del Cliente
@@ -34,6 +60,22 @@ Backend profesional para Asistente de Voz médico con integración **Bland Voice
 - ✅ **Rate Limiting** - Control de cuota por plan
 - ✅ **Usage Tracking** - Registro de tokens y costos
 - ✅ **Status Endpoint** - Consultar cuota disponible y estadísticas
+
+### Widget Embebible
+- ✅ **Configuración Personalizada** - Theme, idioma, posición, colores
+- ✅ **Consultas VoxAgentAI** - Integración con motor de IA
+- ✅ **Autenticación API Key** - Seguridad con X-API-Key header
+- ✅ **CORS Configurado** - Embebible en cualquier dominio autorizado
+- ✅ **Almacenamiento JSON** - Configuración y logs por tenant
+- ✅ **Endpoints Mock** - Para desarrollo y demos
+
+### Transcripción de Audio (VAPI)
+- ✅ **Integración VAPI API** - Transcripción speech-to-text
+- ✅ **Almacenamiento por Sesión** - JSON por conversación
+- ✅ **Metadatos Detallados** - Palabras, timing, confianza
+- ✅ **Cálculo de Costos** - ~$0.006 USD por minuto
+- ✅ **Modo Mock** - Fallback para desarrollo sin VAPI
+- ✅ **Endpoints Administrativos** - Historial, sesiones, estadísticas
 
 ### Infraestructura
 - ✅ **Integración Bland Voice** con webhook handling
