@@ -1,0 +1,98 @@
+[
+  {
+    "id": "demo-interaction-001",
+    "tenantId": "demo",
+    "sessionId": "demo-session-001",
+    "query": "Hola, ¿qué puedes hacer?",
+    "response": "Soy VoxAgentAI, puedo ayudarte con consultas y tareas. ¿En qué te gustaría que te ayude hoy?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 25,
+      "cost": 0.0003,
+      "duration": 450,
+      "userAgent": "Mozilla/5.0 (Demo Widget)",
+      "ipAddress": "127.0.0.1"
+    },
+    "timestamp": "2025-11-19T10:00:00Z"
+  },
+  {
+    "id": "demo-interaction-002",
+    "tenantId": "demo",
+    "sessionId": "demo-session-001",
+    "query": "¿Cuál es el horario de atención?",
+    "response": "Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 horas.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 28,
+      "cost": 0.0003,
+      "duration": 380,
+      "userAgent": "Mozilla/5.0 (Demo Widget)",
+      "ipAddress": "127.0.0.1"
+    },
+    "timestamp": "2025-11-19T10:05:00Z"
+  },
+  {
+    "id": "demo-interaction-003",
+    "tenantId": "demo",
+    "sessionId": "demo-session-002",
+    "query": "¿Ofrecen soporte técnico?",
+    "response": "Sí, ofrecemos soporte técnico completo. Puedes contactarnos en soporte@voxagent.ai o llamar al 900-123-456.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 32,
+      "cost": 0.0004,
+      "duration": 520,
+      "userAgent": "Mozilla/5.0 (Demo Widget)",
+      "ipAddress": "127.0.0.1"
+    },
+    "timestamp": "2025-11-19T11:30:00Z"
+  },
+  {
+    "id": "demo-interaction-1763546595924",
+    "tenantId": "demo",
+    "sessionId": "demo-session",
+    "query": "Hola, ¿cómo estás?",
+    "response": "¡Hola! Soy VoxAgentAI, tu asistente virtual. ¿En qué puedo ayudarte hoy?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 22,
+      "cost": 0.0003,
+      "duration": 379,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T10:03:15.924Z"
+  },
+  {
+    "id": "demo-interaction-1763546595972",
+    "tenantId": "demo",
+    "sessionId": "test-session-001",
+    "query": "¿Cuál es el horario de atención?",
+    "response": "Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 horas.",
+    "mode": "text",
+    "metadata": {
+      "tokens": 31,
+      "cost": 0.0003,
+      "duration": 375,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T10:03:15.972Z"
+  },
+  {
+    "id": "demo-interaction-1763546596013",
+    "tenantId": "demo",
+    "sessionId": "test-session-001",
+    "query": "¿Cuánto cuesta el servicio?",
+    "response": "Gracias por tu consulta sobre \"¿Cuánto cuesta el servicio?\". Nuestro equipo está procesando tu solicitud. ¿Hay algo más en lo que pueda ayudarte?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 24,
+      "cost": 0.0003,
+      "duration": 348,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T10:03:16.013Z"
+  }
+]

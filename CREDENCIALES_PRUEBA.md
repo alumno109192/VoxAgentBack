@@ -266,6 +266,26 @@ curl -X PUT http://localhost:4000/widget/config \
     "primaryColor": "#8B5CF6",
     "welcomeMessage": "¡Bienvenido! ¿Cómo puedo ayudarte?"
   }' | jq .
+
+# ========== ENDPOINTS WIDGET MOCK (Desarrollo) ==========
+
+# 27. Obtener configuración mock (sin auth)
+curl -s 'http://localhost:4000/widget-mock/config' | jq .
+
+# 28. Consulta mock (sin API Key)
+curl -X POST 'http://localhost:4000/widget-mock/query' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query": "¿Cómo funciona el widget?",
+    "mode": "text",
+    "sessionId": "demo-test-123"
+  }' | jq .
+
+# 29. Ver interacciones mock
+curl -s 'http://localhost:4000/widget-mock/interactions?limit=5' | jq .
+
+# 30. Estadísticas mock
+curl -s 'http://localhost:4000/widget-mock/stats' | jq .
 ```
 
 ## 🎯 Endpoints del Panel Interno
@@ -335,6 +355,14 @@ curl -X PUT http://localhost:4000/widget/config \
 | PUT | `/widget/config` | ✅ (JWT) | Actualizar configuración widget |
 | GET | `/widget/interactions` | ✅ (JWT) | Historial de interacciones |
 | GET | `/widget/stats` | ✅ (JWT) | Estadísticas de uso del widget |
+
+### 🧪 Widget Mock (Desarrollo Sin Auth)
+| Método | Endpoint | Requiere Auth | Descripción |
+|--------|----------|---------------|-------------|
+| GET | `/widget-mock/config` | ❌ (Público) | Config mock para desarrollo rápido |
+| POST | `/widget-mock/query` | ❌ (Público) | Query mock sin API Key |
+| GET | `/widget-mock/interactions` | ❌ (Público) | Ver historial mock |
+| GET | `/widget-mock/stats` | ❌ (Público) | Estadísticas mock |
 
 ## 🔍 Verificación
 

@@ -24,6 +24,7 @@ import plansRoutes from './routes/plans';
 import voxagentaiRoutes from './routes/voxagentai';
 import mockRoutes from './routes/mock';
 import widgetRoutes from './routes/widget';
+import widgetMockRoutes from './routes/widgetMock';
 
 const app: Application = express();
 
@@ -119,6 +120,9 @@ app.use('/voxagentai', voxagentaiRoutes);
 
 // Mock endpoints (development/demo)
 app.use('/mock', mockRoutes);
+
+// Widget mock endpoints (sin autenticación, solo desarrollo)
+app.use('/widget-mock', widgetMockRoutes);
 
 // Legacy /api prefix routes (keep for backward compatibility)
 app.use('/api/auth', authRoutes);

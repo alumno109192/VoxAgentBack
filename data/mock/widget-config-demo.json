@@ -1,0 +1,24 @@
+{
+  "tenantId": "demo",
+  "theme": "light",
+  "language": "es-ES",
+  "voice": "female",
+  "position": "bottom-right",
+  "enabled": true,
+  "brandName": "VoxAgent Demo",
+  "brandLogo": "https://cdn.voxagent.ai/logo.png",
+  "primaryColor": "#4F46E5",
+  "secondaryColor": "#818CF8",
+  "welcomeMessage": "¡Hola! Soy VoxAgentAI. ¿En qué puedo ayudarte?",
+  "placeholderText": "Escribe tu pregunta aquí...",
+  "buttonText": "Enviar",
+  "maxQueriesPerDay": 100,
+  "allowedDomains": [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080"
+  ],
+  "customCSS": "",
+  "createdAt": "2025-11-19T10:00:00Z",
+  "updatedAt": "2025-11-19T10:00:00Z"
+}
