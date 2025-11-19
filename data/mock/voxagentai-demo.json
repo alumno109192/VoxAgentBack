@@ -94,5 +94,21 @@
       "ipAddress": "::1"
     },
     "timestamp": "2025-11-19T10:03:16.013Z"
+  },
+  {
+    "id": "demo-interaction-1763547948843",
+    "tenantId": "demo",
+    "sessionId": "test-flow-session",
+    "query": "¿Qué puedes hacer?",
+    "response": "Gracias por tu consulta sobre \"¿Qué puedes hacer?\". Nuestro equipo está procesando tu solicitud. ¿Hay algo más en lo que pueda ayudarte?",
+    "mode": "text",
+    "metadata": {
+      "tokens": 24,
+      "cost": 0.0003,
+      "duration": 469,
+      "userAgent": "curl/8.7.1",
+      "ipAddress": "::1"
+    },
+    "timestamp": "2025-11-19T10:25:48.843Z"
   }
 ]

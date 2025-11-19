@@ -412,6 +412,59 @@ const calls = await fetch('http://localhost:4000/calls?tenantId=test-tenant-001'
 });
 ```
 
+## 🎨 Widget Embebible - Integración
+
+### Snippet para copiar en cualquier web:
+
+```html
+<!-- Widget VoxAgentAI - Copiar en tu HTML -->
+<script>
+  (function() {
+    // Crear contenedor del widget
+    const widgetContainer = document.createElement('div');
+    widgetContainer.id = 'voxagent-widget';
+    widgetContainer.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 400px;
+      height: 600px;
+      border: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 9999;
+    `;
+    
+    // Crear iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = 'http://localhost:4000/examples/widget-demo.html';
+    iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+    
+    // Agregar al DOM cuando cargue la página
+    window.addEventListener('load', function() {
+      widgetContainer.appendChild(iframe);
+      document.body.appendChild(widgetContainer);
+    });
+  })();
+</script>
+```
+
+### ✅ Resultado esperado:
+1. Widget flotante aparece en esquina inferior derecha
+2. Chat funcional con respuestas mock
+3. Sin necesidad de API Key (endpoints mock)
+4. Interacciones guardadas en `voxagentai-demo.json`
+
+### 📋 Scripts de prueba disponibles:
+```bash
+# Prueba completa del flujo del widget
+bash scripts/test-widget-flow.sh
+
+# Prueba de endpoints mock
+bash scripts/test-widget-mock.sh
+```
+
 ---
 
 **Nota**: Estas credenciales son **solo para desarrollo local**. No usar en producción.
