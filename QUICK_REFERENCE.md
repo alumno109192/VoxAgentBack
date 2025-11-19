@@ -64,8 +64,8 @@ GET /widget/config
 
 # Response
 {
-  "publicKey": "a8e14149-23ab-405d-afb9-b0889aa1f58c",
-  "assistantId": "901c39a3-a56f-4554-8d75-fb41d0c83e11",
+  "publicKey": "209ac772-6752-4407-9740-84afdfc7a41c",
+  "assistantId": "0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf",
   "theme": {
     "primaryColor": "#4F46E5",
     "position": "bottom-right"

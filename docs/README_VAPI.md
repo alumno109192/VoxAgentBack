@@ -5,8 +5,8 @@
 ### 🔑 Tus Credenciales (Ya Configuradas)
 
 ```
-Public Key:     a8e14149-23ab-405d-afb9-b0889aa1f58c
-Assistant ID:   901c39a3-a56f-4554-8d75-fb41d0c83e11
+Public Key:     209ac772-6752-4407-9740-84afdfc7a41c
+Assistant ID:   0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf
 ```
 
 ---
@@ -33,8 +33,8 @@ npm run dev
 ```html
 <!-- Pega este código en tu HTML -->
 <vapi-widget 
-  assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-  public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+  assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+  public-key="209ac772-6752-4407-9740-84afdfc7a41c">
 </vapi-widget>
 
 <script

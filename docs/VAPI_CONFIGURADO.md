@@ -5,8 +5,8 @@
 ### 🔑 Tus Credenciales
 
 ```
-Public Key:     a8e14149-23ab-405d-afb9-b0889aa1f58c
-Assistant ID:   901c39a3-a56f-4554-8d75-fb41d0c83e11
+Public Key:     209ac772-6752-4407-9740-84afdfc7a41c
+Assistant ID:   0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf
 ```
 
 ---
@@ -26,8 +26,8 @@ El archivo ya tiene tus credenciales configuradas por defecto:
 ```env
 # VAPI Configuration (YA CONFIGURADO)
 VAPI_API_URL=https://api.vapi.ai
-VAPI_PUBLIC_KEY=a8e14149-23ab-405d-afb9-b0889aa1f58c
-VAPI_ASSISTANT_ID=901c39a3-a56f-4554-8d75-fb41d0c83e11
+VAPI_PUBLIC_KEY=209ac772-6752-4407-9740-84afdfc7a41c
+VAPI_ASSISTANT_ID=0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf
 ```
 
 ### 2. Iniciar el Servidor
@@ -63,8 +63,8 @@ examples/vapi-widget-demo.html
   
   <!-- VAPI Widget -->
   <vapi-widget 
-    assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-    public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+    assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+    public-key="209ac772-6752-4407-9740-84afdfc7a41c">
   </vapi-widget>
 
   <script
@@ -90,8 +90,8 @@ examples/vapi-widget-demo.html
 
   <!-- VAPI Widget -->
   <vapi-widget 
-    assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-    public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+    assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+    public-key="209ac772-6752-4407-9740-84afdfc7a41c">
   </vapi-widget>
 
   <script
@@ -189,7 +189,7 @@ curl http://localhost:4000/widget/config?tenantId=test-tenant-001 | jq '.vapi'
         "audioSize": 38400,
         "format": "webm",
         "engine": "vapi",
-        "assistantId": "901c39a3-a56f-4554-8d75-fb41d0c83e11",
+        "assistantId": "0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf",
         "cost": 0.00025
       }
     }
@@ -198,8 +198,8 @@ curl http://localhost:4000/widget/config?tenantId=test-tenant-001 | jq '.vapi'
   "totalCost": 0.00025,
   "totalWords": 3,
   "vapiConfig": {
-    "publicKey": "a8e14149-23ab-405d-afb9-b0889aa1f58c",
-    "assistantId": "901c39a3-a56f-4554-8d75-fb41d0c83e11"
+    "publicKey": "209ac772-6752-4407-9740-84afdfc7a41c",
+    "assistantId": "0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf"
   }
 }
 ```
@@ -223,8 +223,8 @@ curl http://localhost:4000/widget/config?tenantId=test-tenant-001 | jq '.vapi'
 </style>
 
 <vapi-widget 
-  assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-  public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+  assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+  public-key="209ac772-6752-4407-9740-84afdfc7a41c">
 </vapi-widget>
 ```
 
@@ -232,8 +232,8 @@ curl http://localhost:4000/widget/config?tenantId=test-tenant-001 | jq '.vapi'
 
 ```html
 <vapi-widget 
-  assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-  public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c"
+  assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+  public-key="209ac772-6752-4407-9740-84afdfc7a41c"
   button-label="Hablar con IA"
   assistant-override='{
     "transcriber": {
@@ -280,8 +280,8 @@ curl http://localhost:4000/widget/config?tenantId=test-tenant-001 | jq '.vapi'
 
   <!-- Widget VAPI en esquina inferior derecha -->
   <vapi-widget 
-    assistant-id="901c39a3-a56f-4554-8d75-fb41d0c83e11" 
-    public-key="a8e14149-23ab-405d-afb9-b0889aa1f58c">
+    assistant-id="0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf" 
+    public-key="209ac772-6752-4407-9740-84afdfc7a41c">
   </vapi-widget>
 
   <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async></script>
@@ -304,8 +304,8 @@ function VoiceAssistant() {
 
     // Crear widget element
     const widget = document.createElement('vapi-widget');
-    widget.setAttribute('assistant-id', '901c39a3-a56f-4554-8d75-fb41d0c83e11');
-    widget.setAttribute('public-key', 'a8e14149-23ab-405d-afb9-b0889aa1f58c');
+    widget.setAttribute('assistant-id', '0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf');
+    widget.setAttribute('public-key', '209ac772-6752-4407-9740-84afdfc7a41c');
     document.body.appendChild(widget);
 
     return () => {

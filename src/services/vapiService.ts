@@ -14,8 +14,8 @@ class VapiService {
 
   constructor() {
     this.apiUrl = config.vapi?.apiUrl || 'https://api.vapi.ai';
-    this.publicKey = config.vapi?.publicKey || 'a8e14149-23ab-405d-afb9-b0889aa1f58c';
-    this.assistantId = config.vapi?.assistantId || '901c39a3-a56f-4554-8d75-fb41d0c83e11';
+    this.publicKey = config.vapi?.publicKey || '209ac772-6752-4407-9740-84afdfc7a41c';
+    this.assistantId = config.vapi?.assistantId || '0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf';
     this.apiKey = config.vapi?.apiKey;
   }
 
