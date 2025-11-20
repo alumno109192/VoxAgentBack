@@ -128,8 +128,15 @@ npm install
 cp .env.example .env
 # Editar .env con tus credenciales
 
+# ✅ IMPORTANTE: Google Cloud Speech-to-Text ya está configurado
+# Las credenciales están en: /Users/yesod/voxagentai-2825cc56f9c9.json
+# La variable GOOGLE_APPLICATION_CREDENTIALS ya está en .env
+
 # Iniciar servicios (MongoDB y Redis deben estar corriendo)
 npm run dev
+
+# El servidor estará disponible en http://localhost:4000
+# Google STT estará en modo PRODUCCIÓN (no mock)
 ```
 
 ### Con Docker Compose (Recomendado)

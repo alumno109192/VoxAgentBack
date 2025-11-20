@@ -11,6 +11,18 @@ El backend está configurado para funcionar **SIN MongoDB** utilizando un archiv
 - **Auth Modificado**: `/src/routes/auth.ts` - Detecta si MongoDB está disponible y usa JSON como fallback
 - **Middleware**: `/src/middleware/auth.ts` - Validación de JWT con soporte para JSON
 
+## 🔐 Credenciales de Servicios
+
+### Google Cloud Speech-to-Text
+```bash
+# Archivo de credenciales configurado
+GOOGLE_APPLICATION_CREDENTIALS=/Users/yesod/voxagentai-2825cc56f9c9.json
+```
+
+**Estado**: ✅ Configurado y listo para usar
+
+**Proyecto**: voxagentai (Google Cloud)
+
 ## 👥 Usuarios Disponibles
 
 ### 1. Usuario Administrador

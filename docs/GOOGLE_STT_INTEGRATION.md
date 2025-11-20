@@ -22,6 +22,31 @@ Este sistema utiliza **Google Cloud Speech-to-Text** para transcribir audio en t
 
 ## 🔧 Configuración
 
+### ✅ Configuración Actual (Ya Completada)
+
+El proyecto **ya está configurado** y listo para usar Google Cloud Speech-to-Text:
+
+```bash
+# Credenciales configuradas
+GOOGLE_APPLICATION_CREDENTIALS=/Users/yesod/voxagentai-2825cc56f9c9.json
+
+# Proyecto: voxagentai
+# Service Account: cloud-speech-client@voxagentai.iam.gserviceaccount.com
+```
+
+**Para verificar la configuración:**
+```bash
+./scripts/verify-google-credentials.sh
+```
+
+**Para iniciar el servidor:**
+```bash
+npm run dev
+# El servidor usará Google STT en modo PRODUCCIÓN (no mock)
+```
+
+### 📋 Configuración Manual (Si Necesitas Cambiar el Proyecto)
+
 ### 1. Credenciales de Google Cloud
 
 1. **Crear proyecto en Google Cloud Console**:
