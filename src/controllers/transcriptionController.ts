@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import vapiService from '../services/vapiService';
+import googleSpeechService from '../services/googleSpeechService';
 import logger from '../utils/logger';
 import {
   TranscriptionRequest,
@@ -40,23 +40,60 @@ export const transcribeSegment = async (req: Request, res: Response): Promise<an
       language,
     });
 
-    // Transcribir con VAPI
-    const vapiResult = await vapiService.transcribeAudio(audioBlob, language);
+    // Decodificar audio de base64 si es necesario
+    const audioBuffer = Buffer.isBuffer(audioBlob) 
+      ? audioBlob 
+      : Buffer.from(audioBlob, 'base64');
+
+    // Mapear formato a encoding de Google
+    const encodingMap: { [key: string]: string } = {
+      'webm': 'WEBM_OPUS',
+      'wav': 'LINEAR16',
+      'mp3': 'MP3',
+      'ogg': 'OGG_OPUS',
+    };
+
+    const encoding = encodingMap[format.toLowerCase()] || 'WEBM_OPUS';
+    
+    // Determinar sample rate basado en formato
+    const sampleRateMap: { [key: string]: number } = {
+      'webm': 48000,
+      'wav': 16000,
+      'mp3': 16000,
+      'ogg': 48000,
+    };
+
+    const sampleRate = sampleRateMap[format.toLowerCase()] || 48000;
+
+    // Transcribir con Google Cloud Speech-to-Text
+    const googleResult = await googleSpeechService.transcribe(
+      audioBuffer,
+      encoding,
+      sampleRate,
+      language
+    );
 
     // Crear segmento de transcripción
     const segment: TranscriptionSegment = {
       id: `segment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       sessionId,
       tenantId,
-      text: vapiResult.text,
-      confidence: vapiResult.confidence,
-      duration: vapiResult.duration,
+      text: googleResult.text,
+      confidence: googleResult.confidence,
+      duration: googleResult.words && googleResult.words.length > 0
+        ? googleResult.words[googleResult.words.length - 1].endTime
+        : audioBuffer.length / 16000, // Estimación basada en tamaño
       timestamp: new Date().toISOString(),
       metadata: {
-        audioSize: audioBlob.length,
+        audioSize: audioBuffer.length,
         format,
-        engine: 'vapi',
-        cost: calculateTranscriptionCost(audioBlob.length, vapiResult.duration),
+        engine: 'google-stt',
+        cost: calculateTranscriptionCost(audioBuffer.length, 
+          googleResult.words && googleResult.words.length > 0
+            ? googleResult.words[googleResult.words.length - 1].endTime
+            : undefined
+        ),
+        words: googleResult.words,
       },
     };
 
@@ -222,27 +259,36 @@ export const getTranscriptionStats = async (req: Request, res: Response): Promis
  */
 export const healthCheck = async (_req: Request, res: Response): Promise<any> => {
   try {
-    const vapiHealth = await vapiService.checkHealth();
+    const googleHealth = await googleSpeechService.healthCheck();
 
     res.json({
-      status: 'ok',
-      vapi: vapiHealth,
+      status: googleHealth.status,
+      service: 'google-stt',
+      configured: googleHealth.configured,
+      mode: googleHealth.mode,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     res.status(500).json({
       status: 'error',
+      service: 'google-stt',
       error: error.message,
+      timestamp: new Date().toISOString(),
     });
   }
 };
 
 /**
  * Helper: Calculate transcription cost
+ * Google Cloud STT: $0.006 per 15 seconds
  */
 function calculateTranscriptionCost(audioSize: number, duration?: number): number {
-  // Cost based on audio duration
-  // Example: $0.006 per minute (like Google Speech-to-Text)
-  const durationInMinutes = (duration || audioSize / 10000) / 60;
-  return Math.round(durationInMinutes * 0.006 * 10000) / 10000;
+  // Estimar duración si no se proporciona
+  const durationInSeconds = duration || audioSize / 16000; // Aproximación basada en 16kHz
+  
+  // Google STT cobra por cada 15 segundos
+  const billingUnits = Math.ceil(durationInSeconds / 15);
+  const costPer15Seconds = 0.006;
+  
+  return Math.round(billingUnits * costPer15Seconds * 10000) / 10000;
 }

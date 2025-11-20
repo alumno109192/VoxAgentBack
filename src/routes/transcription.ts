@@ -15,8 +15,8 @@ const router = express.Router();
  * @swagger
  * /transcription/segment:
  *   post:
- *     summary: Transcribe audio segment using VAPI
- *     description: Receives audio from widget, sends to VAPI for transcription, saves segment in JSON
+ *     summary: Transcribe audio segment using Google Cloud Speech-to-Text
+ *     description: Receives audio from widget, sends to Google STT for transcription, saves segment in JSON
  *     tags: [Transcription]
  *     security:
  *       - ApiKeyAuth: []
@@ -46,10 +46,12 @@ const router = express.Router();
  *                 type: string
  *                 enum: [webm, mp3, wav, ogg]
  *                 default: webm
+ *                 description: Audio format (determines encoding for Google STT)
  *               language:
  *                 type: string
  *                 default: es-ES
  *                 example: es-ES
+ *                 description: Language code for transcription
  *     responses:
  *       200:
  *         description: Transcription successful
@@ -76,6 +78,9 @@ const router = express.Router();
  *                       type: number
  *                     cost:
  *                       type: number
+ *                     engine:
+ *                       type: string
+ *                       example: google-stt
  *       400:
  *         description: Missing required fields
  *       401:
@@ -181,12 +186,34 @@ router.get('/stats', authenticate, getTranscriptionStats);
  * @swagger
  * /transcription/health:
  *   get:
- *     summary: Health check for transcription service
- *     description: Check if VAPI integration is working
+ *     summary: Check Google Speech-to-Text service status
+ *     description: Verifies if Google Cloud credentials are configured and service is ready
  *     tags: [Transcription]
  *     responses:
  *       200:
- *         description: Service health status
+ *         description: Service status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [ok, degraded]
+ *                   example: ok
+ *                 service:
+ *                   type: string
+ *                   example: google-stt
+ *                 configured:
+ *                   type: boolean
+ *                   example: true
+ *                 mode:
+ *                   type: string
+ *                   enum: [production, mock]
+ *                   example: production
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
  */
 router.get('/health', healthCheck);
 

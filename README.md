@@ -1,16 +1,17 @@
 # Voice Assistant Backend 🎙️
 
-Backend profesional para Asistente de Voz médico con integración **Bland Voice**, diseñado para atención médica, transcripción de dictados y gestión multi-tenant.
+Backend profesional para Asistente de Voz médico con integración **Google Cloud Speech-to-Text**, diseñado para atención médica, transcripción de dictados y gestión multi-tenant.
 
 ---
 
 ## 📘 Documentación Actualizada
 
-> **🆕 NUEVO: Documentación completa de API y OpenAPI/Swagger implementado**
+> **🆕 NUEVO: Migración a Google Cloud Speech-to-Text + OpenAPI/Swagger completo**
 
 ### 🔥 Inicio Rápido
 - **[DOCS_INDEX.md](./DOCS_INDEX.md)** - 📚 Índice completo de toda la documentación
 - **[RESUMEN_ENDPOINTS_OPENAPI.md](./RESUMEN_ENDPOINTS_OPENAPI.md)** - ⭐ Resumen de implementación (empezar aquí)
+- **[docs/GOOGLE_STT_INTEGRATION.md](./docs/GOOGLE_STT_INTEGRATION.md)** - 🎤 **Guía de Google Speech-to-Text**
 
 ### 📖 Documentación de API
 - **[docs/API_ENDPOINTS.md](./docs/API_ENDPOINTS.md)** - 📋 **61 endpoints documentados** con ejemplos
@@ -22,8 +23,8 @@ Backend profesional para Asistente de Voz médico con integración **Bland Voice
 # Abrir Swagger UI (documentación interactiva)
 ./scripts/start-swagger.sh
 
-# Abrir demos del widget VAPI
-./scripts/start-with-demos.sh
+# Demo de Google Speech-to-Text
+open examples/google-stt-demo.html
 ```
 
 ---
