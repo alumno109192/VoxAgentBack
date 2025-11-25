@@ -11,6 +11,25 @@ El backend está configurado para funcionar **SIN MongoDB** utilizando un archiv
 - **Auth Modificado**: `/src/routes/auth.ts` - Detecta si MongoDB está disponible y usa JSON como fallback
 - **Middleware**: `/src/middleware/auth.ts` - Validación de JWT con soporte para JSON
 
+## 🔐 Credenciales de Servicios
+
+### VAPI (Transcripción Speech-to-Text)
+```bash
+# Configuración completa en .env
+VAPI_API_URL=https://api.vapi.ai
+VAPI_PUBLIC_KEY=209ac772-6752-4407-9740-84afdfc7a41c
+VAPI_ASSISTANT_ID=0e9f3fcb-a5c4-4ea3-b8ff-52e8af6e3bdf
+VAPI_API_KEY=866040f5-1fdc-40f0-92fd-f8c6077573a1
+```
+
+**Estado**: ✅ Configurado y listo para usar
+
+**Características**:
+- Widget embebible para frontend
+- Transcripción server-side con API Key
+- Modo mock disponible para desarrollo
+- Costo: ~$0.006 USD por minuto
+
 ## 👥 Usuarios Disponibles
 
 ### 1. Usuario Administrador
