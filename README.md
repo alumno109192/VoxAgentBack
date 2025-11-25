@@ -1,17 +1,16 @@
 # Voice Assistant Backend 🎙️
 
-Backend profesional para Asistente de Voz médico con integración **Google Cloud Speech-to-Text**, diseñado para atención médica, transcripción de dictados y gestión multi-tenant.
+Backend profesional para Asistente de Voz médico con integración **Bland Voice**, diseñado para atención médica, transcripción de dictados y gestión multi-tenant.
 
 ---
 
 ## 📘 Documentación Actualizada
 
-> **🆕 NUEVO: Migración a Google Cloud Speech-to-Text + OpenAPI/Swagger completo**
+> **🆕 NUEVO: Documentación completa de API y OpenAPI/Swagger implementado**
 
 ### 🔥 Inicio Rápido
 - **[DOCS_INDEX.md](./DOCS_INDEX.md)** - 📚 Índice completo de toda la documentación
 - **[RESUMEN_ENDPOINTS_OPENAPI.md](./RESUMEN_ENDPOINTS_OPENAPI.md)** - ⭐ Resumen de implementación (empezar aquí)
-- **[docs/GOOGLE_STT_INTEGRATION.md](./docs/GOOGLE_STT_INTEGRATION.md)** - 🎤 **Guía de Google Speech-to-Text**
 
 ### 📖 Documentación de API
 - **[docs/API_ENDPOINTS.md](./docs/API_ENDPOINTS.md)** - 📋 **61 endpoints documentados** con ejemplos
@@ -23,8 +22,8 @@ Backend profesional para Asistente de Voz médico con integración **Google Clou
 # Abrir Swagger UI (documentación interactiva)
 ./scripts/start-swagger.sh
 
-# Demo de Google Speech-to-Text
-open examples/google-stt-demo.html
+# Abrir demos del widget VAPI
+./scripts/start-with-demos.sh
 ```
 
 ---
@@ -128,15 +127,8 @@ npm install
 cp .env.example .env
 # Editar .env con tus credenciales
 
-# ✅ IMPORTANTE: Google Cloud Speech-to-Text ya está configurado
-# Las credenciales están en: /Users/yesod/voxagentai-2825cc56f9c9.json
-# La variable GOOGLE_APPLICATION_CREDENTIALS ya está en .env
-
 # Iniciar servicios (MongoDB y Redis deben estar corriendo)
 npm run dev
-
-# El servidor estará disponible en http://localhost:4000
-# Google STT estará en modo PRODUCCIÓN (no mock)
 ```
 
 ### Con Docker Compose (Recomendado)
