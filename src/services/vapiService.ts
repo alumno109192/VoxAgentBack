@@ -46,15 +46,15 @@ class VapiService {
         return this.mockTranscribe(audioBlob, language);
       }
 
-      const payload: VapiTranscriptionRequest = {
-        audio: audioBlob,
-        agentId: this.assistantId,
-        apiKey: this.apiKey || '',
-        language,
+      // Payload según especificación de VAPI /v1/transcriptions
+      const payload = {
+        audio: audioBlob, // audio en base64
+        language: language,
+        assistantId: this.assistantId,
       };
 
       const response = await axios.post<VapiTranscriptionResponse>(
-        `${this.apiUrl}/transcribe`,
+        `${this.apiUrl}/v1/transcriptions`,
         payload,
         {
           headers: {

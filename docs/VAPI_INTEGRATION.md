@@ -96,9 +96,29 @@ import config from '../config';
 class VapiService {
   async transcribeAudio(audioBlob: string, language: string = 'es-ES') {
     try {
-      // Llamada a VAPI API
+      // Llamada a VAPI API v1/transcriptions
       const response = await axios.post(
-        `${config.vapi.apiUrl}/transcribe`,
+        `${config.vapi.apiUrl}/v1/transcriptions`,
+        {
+          audio: audioBlob, // audio en base64
+          language: language,
+          assistantId: config.vapi.assistantId,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.vapi.apiKey}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      // Fallback a modo mock si falla
+      return this.mockTranscribe(audioBlob, language);
+    }
+  }
+}
         {
           audio: audioBlob,
           agentId: config.vapi.agentId,
