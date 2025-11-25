@@ -273,7 +273,7 @@
         <div class="config-grid">
           <div class="input-group">
             <label>API Key</label>
-            <input type="text" id="apiKey" value="test-api-key-123" placeholder="Tu API Key">
+            <input type="text" id="apiKey" value="vox_test_sk_1234567890abcdef" placeholder="Tu API Key">
           </div>
           <div class="input-group">
             <label>Tenant ID</label>
@@ -441,7 +441,7 @@
         showStatus('Iniciando sesión...', 'info');
         sessionId = generateSessionId();
 
-        const response = await fetch(`${backendUrl}/api/transcription/session/start`, {
+          const response = await fetch(`${backendUrl}/transcription/session/start`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -535,7 +535,7 @@
           const apiKey = apiKeyInput.value;
           const tenantId = tenantIdInput.value;
 
-          const response = await fetch(`${backendUrl}/api/transcription/vapi`, {
+          const response = await fetch(`${backendUrl}/transcription/vapi`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -595,7 +595,7 @@
 
         showStatus('Finalizando sesión...', 'info');
 
-        const response = await fetch(`${backendUrl}/api/transcription/session/end`, {
+        const response = await fetch(`${backendUrl}/transcription/session/end`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
