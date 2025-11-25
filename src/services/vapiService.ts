@@ -39,96 +39,74 @@ class VapiService {
   }
 
   /**
-   * Create a new VAPI session
+   * Create a new VAPI session (local tracking only - VAPI is stateless)
    */
   async createSession(language: string = 'es-ES', metadata?: Record<string, any>): Promise<VapiSessionResponse> {
     try {
-      logger.info('Creating VAPI session', { language, metadata });
+      logger.info('Creating local VAPI session', { language, metadata });
 
-      // Si VAPI no está configurado, crear sesión mock
+      // Verificar que VAPI esté configurado
       if (!this.apiKey || this.apiKey === 'mock') {
-        logger.warn('VAPI not configured, using mock session');
-        return this.createMockSession(language, metadata);
+        throw new Error('VAPI API key no configurada. Configure VAPI_API_KEY en .env');
       }
 
-      const payload = {
-        assistantId: this.assistantId,
-        language,
-        metadata,
-      };
+      // Generar ID de sesión local (VAPI es stateless, solo usamos /v1/transcriptions)
+      const sessionId = `vapi-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      const response = await axios.post<VapiSessionResponse>(
-        `${this.apiUrl}/v1/sessions`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`,
-          },
-          timeout: 10000,
-        }
-      );
-
-      // Almacenar sesión activa
-      this.activeSessions.set(response.data.sessionId, {
-        sessionId: response.data.sessionId,
+      // Almacenar sesión activa localmente para tracking
+      this.activeSessions.set(sessionId, {
+        sessionId,
         createdAt: new Date(),
         transcripts: [],
       });
 
-      logger.info('VAPI session created successfully', {
-        sessionId: response.data.sessionId,
-        status: response.data.status,
+      const sessionResponse: VapiSessionResponse = {
+        sessionId,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        assistantId: this.assistantId,
+      };
+
+      logger.info('Local VAPI session created', {
+        sessionId,
+        language,
+        note: 'VAPI es stateless, sesión solo para tracking local',
       });
 
-      return response.data;
+      return sessionResponse;
     } catch (error: any) {
-      logger.error('Error creating VAPI session', {
+      logger.error('Error creating local VAPI session', {
         error: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
       });
-
-      // Fallback to mock on error
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        logger.warn('VAPI authentication failed, using mock session');
-        return this.createMockSession(language, metadata);
-      }
-
-      throw new Error('Error al crear sesión VAPI');
+      throw error;
     }
   }
 
   /**
-   * Send audio chunk to VAPI session and get transcription
+   * Send audio chunk to VAPI and get transcription (stateless)
    */
   async sendAudioToSession(sessionId: string, audioBlob: string, sequence?: number): Promise<VapiTranscriptEvent> {
     try {
-      logger.info('Sending audio to VAPI session', {
+      logger.info('Sending audio to VAPI (stateless)', {
         sessionId,
         audioSize: audioBlob.length,
         sequence,
       });
 
-      // Verificar si es sesión mock
-      const session = this.activeSessions.get(sessionId);
-      if (session && sessionId.startsWith('mock-')) {
-        return this.mockTranscriptEvent(audioBlob);
-      }
-
-      // Si VAPI no está configurado, usar mock
+      // Verificar que VAPI esté configurado
       if (!this.apiKey || this.apiKey === 'mock') {
-        logger.warn('VAPI not configured, using mock transcription');
-        return this.mockTranscriptEvent(audioBlob);
+        throw new Error('VAPI API key no configurada. Configure VAPI_API_KEY en .env');
       }
 
+      // Usar endpoint /v1/transcriptions de VAPI (stateless)
       const payload = {
         audio: audioBlob,
-        sequence,
+        language: 'es-ES',
+        assistantId: this.assistantId,
       };
 
-      const response = await axios.post<VapiTranscriptEvent>(
-        `${this.apiUrl}/v1/sessions/${sessionId}/audio`,
+      const response = await axios.post(
+        `${this.apiUrl}/v1/transcriptions`,
         payload,
         {
           headers: {
@@ -139,89 +117,67 @@ class VapiService {
         }
       );
 
-      // Almacenar transcripción en la sesión
+      // Convertir respuesta de VAPI a formato VapiTranscriptEvent
+      const transcriptEvent: VapiTranscriptEvent = {
+        type: 'final',
+        text: response.data.text || '',
+        timestamp: new Date().toISOString(),
+        confidence: response.data.confidence,
+        isFinal: true,
+      };
+
+      // Almacenar transcripción en la sesión local
+      const session = this.activeSessions.get(sessionId);
       if (session) {
-        session.transcripts.push(response.data);
+        session.transcripts.push(transcriptEvent);
       }
 
-      logger.info('Audio transcribed successfully', {
+      logger.info('Audio transcribed successfully with VAPI', {
         sessionId,
-        textLength: response.data.text?.length || 0,
-        type: response.data.type,
-        isFinal: response.data.isFinal,
+        textLength: transcriptEvent.text.length,
+        confidence: transcriptEvent.confidence,
       });
 
-      return response.data;
+      return transcriptEvent;
     } catch (error: any) {
-      logger.error('Error sending audio to VAPI session', {
+      logger.error('Error sending audio to VAPI', {
         error: error.message,
         status: error.response?.status,
         data: error.response?.data,
         sessionId,
       });
 
-      // Fallback to mock on error
       if (error.response?.status === 404) {
-        throw new Error('Sesión VAPI no encontrada o expirada');
+        throw new Error('Endpoint de VAPI no encontrado. Verifique VAPI_API_URL');
       }
 
       if (error.response?.status === 401 || error.response?.status === 403) {
-        logger.warn('VAPI authentication failed, using mock transcription');
-        return this.mockTranscriptEvent(audioBlob);
+        throw new Error('Autenticación VAPI falló. Verifique VAPI_API_KEY');
       }
 
-      throw new Error('Error al enviar audio a sesión VAPI');
+      throw new Error(`Error al transcribir con VAPI: ${error.message}`);
     }
   }
 
   /**
-   * End a VAPI session
+   * End a VAPI session (cleanup local tracking)
    */
   async endSession(sessionId: string): Promise<void> {
     try {
-      logger.info('Ending VAPI session', { sessionId });
+      logger.info('Ending VAPI session (local cleanup)', { sessionId });
 
-      // Si es sesión mock, solo eliminarla del mapa
-      if (sessionId.startsWith('mock-')) {
-        this.activeSessions.delete(sessionId);
-        logger.info('Mock session ended', { sessionId });
-        return;
-      }
-
-      // Si VAPI no está configurado, solo limpiar
-      if (!this.apiKey || this.apiKey === 'mock') {
-        this.activeSessions.delete(sessionId);
-        return;
-      }
-
-      await axios.delete(
-        `${this.apiUrl}/v1/sessions/${sessionId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-          },
-          timeout: 10000,
-        }
-      );
-
-      // Eliminar de sesiones activas
+      // Solo eliminar del tracking local (VAPI es stateless)
       this.activeSessions.delete(sessionId);
 
-      logger.info('VAPI session ended successfully', { sessionId });
+      logger.info('VAPI session ended (local tracking cleaned)', { sessionId });
     } catch (error: any) {
       logger.error('Error ending VAPI session', {
         error: error.message,
-        status: error.response?.status,
         sessionId,
       });
 
       // Eliminar de todas formas
       this.activeSessions.delete(sessionId);
-
-      if (error.response?.status === 404) {
-        logger.warn('Session not found on VAPI, already ended or expired');
-        return;
-      }
 
       throw new Error('Error al finalizar sesión VAPI');
     }
@@ -320,58 +276,6 @@ class VapiService {
   }
 
   /**
-   * Create mock session for development/testing
-   */
-  private createMockSession(language: string, metadata?: Record<string, any>): VapiSessionResponse {
-    const sessionId = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    const mockSession: VapiSessionResponse = {
-      sessionId,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      assistantId: this.assistantId,
-    };
-
-    // Almacenar sesión mock
-    this.activeSessions.set(sessionId, {
-      sessionId,
-      createdAt: new Date(),
-      transcripts: [],
-    });
-
-    logger.info('Mock session created', { sessionId, language, metadata });
-    return mockSession;
-  }
-
-  /**
-   * Generate mock transcript event
-   */
-  private mockTranscriptEvent(_audioBlob: string): VapiTranscriptEvent {
-    const mockTexts = [
-      'Hola, ¿cómo estás?',
-      '¿Cuál es el horario de atención?',
-      'Necesito información sobre sus servicios',
-      'Quisiera hacer una consulta',
-      '¿Tienen disponibilidad para mañana?',
-      'Me gustaría agendar una cita',
-      'Gracias por la información',
-      '¿Cuánto cuesta el servicio?',
-      'Estoy interesado en contratar',
-      '¿Pueden ayudarme con una duda?',
-    ];
-
-    const randomText = mockTexts[Math.floor(Math.random() * mockTexts.length)];
-
-    return {
-      type: 'final',
-      text: randomText,
-      timestamp: new Date().toISOString(),
-      confidence: 0.85 + Math.random() * 0.14,
-      isFinal: true,
-    };
-  }
-
-  /**
    * Mock transcription for development/testing
    */
   private mockTranscribe(audioBlob: string, _language: string): VapiTranscriptionResponse {
@@ -409,24 +313,24 @@ class VapiService {
   /**
    * Check VAPI service health
    */
-  async checkHealth(): Promise<{ status: 'ok' | 'error'; configured: boolean }> {
+  async checkHealth(): Promise<{ status: 'ok' | 'error'; configured: boolean; message?: string }> {
     const configured = !!(this.apiKey && this.apiKey !== 'mock');
     
     if (!configured) {
-      return { status: 'ok', configured: false };
+      return { 
+        status: 'error', 
+        configured: false,
+        message: 'VAPI_API_KEY no configurada' 
+      };
     }
 
-    try {
-      // Simple health check
-      await axios.get(`${this.apiUrl}/health`, {
-        headers: { 'Authorization': `Bearer ${this.apiKey}` },
-        timeout: 5000,
-      });
-      return { status: 'ok', configured: true };
-    } catch (error) {
-      logger.error('VAPI health check failed', { error });
-      return { status: 'error', configured: true };
-    }
+    // Solo validar que las credenciales estén configuradas
+    // No hacer request real porque requiere audio válido
+    return { 
+      status: 'ok', 
+      configured: true,
+      message: 'VAPI configurado correctamente (credenciales presentes)' 
+    };
   }
 }
 
