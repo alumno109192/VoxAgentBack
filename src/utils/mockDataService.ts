@@ -369,6 +369,36 @@ class MockDataService {
   }
 
   // === Transcription Methods ===
+  async createTranscriptionSession(tenantId: string, sessionId: string): Promise<any> {
+    return this.withLock(tenantId, `transcription-${sessionId}`, async () => {
+      // Verificar si ya existe
+      try {
+        const existing = await this.readJSON<any>(tenantId, `transcription-${sessionId}`);
+        if (existing) {
+          logger.info('Transcription session already exists', { tenantId, sessionId });
+          return existing;
+        }
+      } catch (error) {
+        // No existe, crear nueva
+      }
+
+      const session = {
+        sessionId,
+        tenantId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        segments: [],
+        totalDuration: 0,
+        totalCost: 0,
+        totalWords: 0,
+      };
+
+      await this.writeJSON(tenantId, `transcription-${sessionId}`, session);
+      logger.info('Transcription session created', { tenantId, sessionId });
+      return session;
+    });
+  }
+
   async getTranscriptionSession(tenantId: string, sessionId: string): Promise<any | null> {
     try {
       return await this.readJSON<any>(tenantId, `transcription-${sessionId}`);

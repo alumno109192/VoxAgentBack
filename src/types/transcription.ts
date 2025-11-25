@@ -66,3 +66,39 @@ export interface VapiTranscriptionResponse {
     confidence: number;
   }>;
 }
+
+// VAPI Session Types
+export interface VapiSessionConfig {
+  assistantId: string;
+  language?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface VapiSession {
+  id: string;
+  status: 'active' | 'inactive' | 'ended';
+  createdAt: string;
+  endedAt?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface VapiSessionResponse {
+  sessionId: string;
+  status: 'active' | 'inactive' | 'ended';
+  createdAt: string;
+  assistantId: string;
+}
+
+export interface VapiAudioChunk {
+  sessionId: string;
+  audio: string; // base64
+  sequence?: number;
+}
+
+export interface VapiTranscriptEvent {
+  type: 'transcript' | 'partial' | 'final';
+  text: string;
+  timestamp: string;
+  confidence?: number;
+  isFinal?: boolean;
+}

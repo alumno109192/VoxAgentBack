@@ -5,12 +5,224 @@ import {
   TranscriptionRequest,
   TranscriptionResponse,
   TranscriptionSegment,
+  VapiTranscriptEvent,
 } from '../types/transcription';
 import mockDataService from '../utils/mockDataService';
 
 /**
  * Controller for audio transcription endpoints
  */
+
+/**
+ * Start a new VAPI transcription session
+ * POST /transcription/session/start
+ */
+export const startSession = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { language = 'es-ES', tenantId, sessionId, metadata } = req.body;
+
+    // Validar campos requeridos
+    if (!tenantId || !sessionId) {
+      return res.status(400).json({
+        error: 'tenantId y sessionId son requeridos',
+      });
+    }
+
+    logger.info('Starting VAPI session', {
+      tenantId,
+      sessionId,
+      language,
+    });
+
+    // Crear sesión en VAPI
+    const vapiSession = await vapiService.createSession(language, {
+      tenantId,
+      sessionId,
+      ...metadata,
+    });
+
+    // Inicializar sesión de transcripción local
+    await mockDataService.createTranscriptionSession(tenantId, sessionId);
+
+    logger.info('VAPI session started successfully', {
+      vapiSessionId: vapiSession.sessionId,
+      sessionId,
+      tenantId,
+    });
+
+    res.json({
+      success: true,
+      vapiSessionId: vapiSession.sessionId,
+      sessionId,
+      status: vapiSession.status,
+      createdAt: vapiSession.createdAt,
+    });
+  } catch (error: any) {
+    logger.error('Error starting VAPI session', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    // Determinar código de error apropiado
+    const statusCode = error.message.includes('configurado') ? 503 : 500;
+
+    res.status(statusCode).json({
+      error: 'Error al iniciar sesión de transcripción',
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Send audio chunk to VAPI session
+ * POST /transcription/vapi
+ */
+export const transcribeVapi = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const {
+      vapiSessionId,
+      sessionId,
+      tenantId,
+      audioBlob,
+      sequence,
+    } = req.body;
+
+    // Validar campos requeridos
+    if (!vapiSessionId || !sessionId || !tenantId || !audioBlob) {
+      return res.status(400).json({
+        error: 'vapiSessionId, sessionId, tenantId y audioBlob son requeridos',
+      });
+    }
+
+    logger.info('Processing VAPI transcription', {
+      vapiSessionId,
+      sessionId,
+      tenantId,
+      audioSize: audioBlob.length,
+      sequence,
+    });
+
+    // Enviar audio a sesión VAPI
+    const transcriptEvent = await vapiService.sendAudioToSession(
+      vapiSessionId,
+      audioBlob,
+      sequence
+    );
+
+    // Si es transcripción final, guardar en base de datos
+    if (transcriptEvent.isFinal) {
+      const segment: TranscriptionSegment = {
+        id: `segment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        sessionId,
+        tenantId,
+        text: transcriptEvent.text,
+        confidence: transcriptEvent.confidence,
+        timestamp: transcriptEvent.timestamp,
+        metadata: {
+          audioSize: audioBlob.length,
+          format: 'webm',
+          engine: 'vapi',
+          sequence,
+        },
+      };
+
+      await mockDataService.addTranscriptionSegment(tenantId, sessionId, segment);
+    }
+
+    logger.info('VAPI transcription processed', {
+      vapiSessionId,
+      textLength: transcriptEvent.text.length,
+      type: transcriptEvent.type,
+      isFinal: transcriptEvent.isFinal,
+    });
+
+    res.json({
+      text: transcriptEvent.text,
+      type: transcriptEvent.type,
+      isFinal: transcriptEvent.isFinal,
+      confidence: transcriptEvent.confidence,
+      timestamp: transcriptEvent.timestamp,
+    });
+  } catch (error: any) {
+    logger.error('Error processing VAPI transcription', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    // Manejo de errores específicos
+    if (error.message.includes('no encontrada')) {
+      return res.status(404).json({
+        error: 'Sesión no encontrada o expirada',
+        message: error.message,
+      });
+    }
+
+    if (error.message.includes('configurado')) {
+      return res.status(503).json({
+        error: 'Servicio de transcripción no disponible',
+        message: error.message,
+      });
+    }
+
+    res.status(500).json({
+      error: 'Error al procesar transcripción',
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * End a VAPI transcription session
+ * POST /transcription/session/end
+ */
+export const endSession = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { vapiSessionId, sessionId, tenantId } = req.body;
+
+    // Validar campos requeridos
+    if (!vapiSessionId || !sessionId || !tenantId) {
+      return res.status(400).json({
+        error: 'vapiSessionId, sessionId y tenantId son requeridos',
+      });
+    }
+
+    logger.info('Ending VAPI session', {
+      vapiSessionId,
+      sessionId,
+      tenantId,
+    });
+
+    // Finalizar sesión en VAPI
+    await vapiService.endSession(vapiSessionId);
+
+    // Obtener historial de la sesión
+    const session = await mockDataService.getTranscriptionSession(tenantId, sessionId);
+
+    logger.info('VAPI session ended successfully', {
+      vapiSessionId,
+      sessionId,
+      totalSegments: session?.segments.length || 0,
+    });
+
+    res.json({
+      success: true,
+      sessionId,
+      vapiSessionId,
+      totalSegments: session?.segments.length || 0,
+      endedAt: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    logger.error('Error ending VAPI session', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    res.status(500).json({
+      error: 'Error al finalizar sesión',
+      message: error.message,
+    });
+  }
+};
 
 /**
  * Transcribe audio segment
