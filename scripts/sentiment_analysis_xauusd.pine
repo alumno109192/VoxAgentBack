@@ -1,0 +1,448 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// ANÁLISIS DE SENTIMIENTO DE MERCADO – XAUUSD (GOLD)
+// ═══════════════════════════════════════════════════════════════════════════
+// Versión   : 1.0
+// Timeframe : Diario / Semanal recomendado
+// Activo    : XAUUSD
+//
+// FUENTES DE SENTIMIENTO:
+//   A) Smart Money – COT Report + Flujos ETF
+//   B) Retail Contrarian – Ratio Long/Short + Fear & Greed
+//   C) Macro/Narrativa – DXY + US10Y + Riesgo Geopolítico
+//   D) Indicador Koncorde (simulado por RSI/volumen como proxy)
+//
+// NOTA IMPORTANTE:
+//   Pine Script no puede conectarse directamente a fuentes externas
+//   (CFTC, OANDA, IG, Fear & Greed Index, etc.).  Todos los datos
+//   externos se introducen como INPUTS manuales que el operador
+//   actualiza periódicamente según sus fuentes de información.
+// ═══════════════════════════════════════════════════════════════════════════
+
+//@version=5
+indicator(title  = "Sentiment Analysis XAUUSD",
+          shorttitle = "SENT·XAUUSD",
+          overlay    = false,
+          max_lines_count = 100,
+          max_labels_count = 100)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  GRUPO A – SENTIMIENTO INSTITUCIONAL (Smart Money)
+// ───────────────────────────────────────────────────────────────────────────
+grpA = "A) Smart Money – COT & ETF"
+
+// COT – posiciones netas Non-Commercials en Gold Futures
+// Actualizar cada viernes tras la publicación (15:30 UTC, datos del martes).
+cot_netos_actuales   = input.float(defval = 0.0,  title = "COT Netos Largos – Semana actual (contratos)",  group = grpA)
+cot_netos_semana_ant = input.float(defval = 0.0,  title = "COT Netos Largos – Semana anterior (contratos)", group = grpA)
+
+// Flujos ETF (GLD / IAU) – introducir variación diaria en millones USD
+etf_flujo_hoy = input.float(defval = 0.0,  title = "Flujo neto ETF Oro hoy (+ entrada / - salida, Mill. USD)", group = grpA)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  GRUPO B – SENTIMIENTO RETAIL (Contrarian)
+// ───────────────────────────────────────────────────────────────────────────
+grpB = "B) Retail Contrarian – Ratio & Fear/Greed"
+
+retail_pct_long  = input.float(defval = 50.0, title = "% Retail LARGO (OANDA/IG/Myfxbook)",  minval = 0.0, maxval = 100.0, group = grpB)
+fear_greed_index = input.float(defval = 50.0, title = "Fear & Greed Index (0–100)",           minval = 0.0, maxval = 100.0, group = grpB)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  GRUPO C – SENTIMIENTO MACRO / NARRATIVA
+// ───────────────────────────────────────────────────────────────────────────
+grpC = "C) Macro – DXY / US10Y / Geopolítica"
+
+// DXY: variación porcentual en la sesión actual
+dxy_cambio_pct = input.float(defval = 0.0,   title = "DXY cambio sesión (%)",   step = 0.01, group = grpC)
+
+// US10Y: rendimiento actual del bono a 10 años EE.UU.
+us10y_actual  = input.float(defval = 4.50,  title = "US10Y rendimiento actual (%)", step = 0.01, group = grpC)
+us10y_ayer    = input.float(defval = 4.50,  title = "US10Y rendimiento ayer (%)",   step = 0.01, group = grpC)
+
+// Riesgo geopolítico – activar manualmente
+geo_riesgo_activo = input.bool(defval = false, title = "Riesgo Geopolítico Activo",  group = grpC)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  GRUPO D – INDICADOR KONCORDE (proxy RSI/Volumen)
+// ───────────────────────────────────────────────────────────────────────────
+// Dado que Koncorde es un indicador propietario, se ofrece:
+//   1) Selección manual del estado Koncorde
+//   2) Un proxy automático basado en RSI + variación de volumen
+
+grpD = "D) Koncorde"
+
+koncorde_modo   = input.string(defval = "Auto (RSI+Vol)", title = "Modo Koncorde",
+                 options = ["Auto (RSI+Vol)", "Manual"], group = grpD)
+koncorde_manual = input.string(defval = "Neutral",
+                 title   = "Koncorde estado manual",
+                 options = ["Acumulación (verde)", "Trampa Retail (naranja)", "Recesión (rojo)", "Neutral"],
+                 group   = grpD)
+
+koncorde_rsi_len = input.int(defval = 14, title = "RSI período (proxy Koncorde)", minval = 2, maxval = 50, group = grpD)
+koncorde_vol_len = input.int(defval = 20, title = "Volumen MA período (proxy)",   minval = 2, maxval = 100, group = grpD)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  GRUPO E – COT histórico (filtro de 3 semanas)
+// ───────────────────────────────────────────────────────────────────────────
+grpE = "E) COT histórico (filtro 3 semanas)"
+
+cot_sem1_reduccion = input.bool(defval = false, title = "COT semana -1: reducción de largos >15%", group = grpE)
+cot_sem2_reduccion = input.bool(defval = false, title = "COT semana -2: reducción de largos >15%", group = grpE)
+cot_sem3_reduccion = input.bool(defval = false, title = "COT semana -3: reducción de largos >15%", group = grpE)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  CÁLCULO DEL ESTADO KONCORDE (proxy automático)
+// ───────────────────────────────────────────────────────────────────────────
+
+rsi_val  = ta.rsi(close, koncorde_rsi_len)
+vol_ma   = ta.sma(volume, koncorde_vol_len)
+vol_ratio = volume / vol_ma   // > 1 = volumen por encima de la media
+
+// Proxy: Acumulación si RSI entre 45-65 con volumen alto y precio subiendo
+//        Trampa Retail si RSI > 70 o RSI < 30 (sobreextensión)
+//        Recesión si RSI < 35 con volumen muy alto (distribución)
+koncorde_proxy_estado =
+     rsi_val > 70 or rsi_val < 30 ? "Trampa Retail (naranja)" :
+     rsi_val < 35 and vol_ratio > 1.5             ? "Recesión (rojo)"         :
+     rsi_val >= 45 and rsi_val <= 65 and vol_ratio > 1.2 ? "Acumulación (verde)" :
+     "Neutral"
+
+koncorde_estado = koncorde_modo == "Manual" ? koncorde_manual : koncorde_proxy_estado
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  CÁLCULO DE SEÑALES INDIVIDUALES
+// ───────────────────────────────────────────────────────────────────────────
+
+// — COT —
+cot_cambio_pct = cot_netos_semana_ant != 0 ?
+     (cot_netos_actuales - cot_netos_semana_ant) / math.abs(cot_netos_semana_ant) * 100.0 : 0.0
+
+cot_alcista = cot_cambio_pct >  10.0   // netos largos aumentan >10% s/s
+cot_bajista = cot_cambio_pct < -15.0   // reducen posiciones largas >15%
+
+// — ETF —
+etf_alcista = etf_flujo_hoy > 0.0
+etf_bajista = etf_flujo_hoy < 0.0
+
+// — Retail Contrarian —
+retail_pct_short  = 100.0 - retail_pct_long
+contrarian_bajista = retail_pct_long  > 70.0   // mayoría retail largo  → señal SELL
+contrarian_alcista = retail_pct_short > 70.0   // mayoría retail corto  → señal BUY
+
+// — Fear & Greed —
+fg_extreme_fear  = fear_greed_index < 25.0
+fg_extreme_greed = fear_greed_index > 75.0
+fg_neutral       = fear_greed_index >= 40.0 and fear_greed_index <= 60.0
+
+// — DXY —
+dxy_bajando_fuerte = dxy_cambio_pct < -0.5   // DXY cae >0.5% en sesión → BUY oro
+dxy_subiendo_fuerte = dxy_cambio_pct > 1.0  // DXY sube >1%            → filtro BUY
+
+// — US10Y —
+us10y_cayendo = us10y_actual < us10y_ayer
+us10y_umbral  = us10y_actual > 4.80          // reducir BUY en oro
+
+// — Koncorde —
+konc_verde   = koncorde_estado == "Acumulación (verde)"
+konc_naranja = koncorde_estado == "Trampa Retail (naranja)"
+konc_rojo    = koncorde_estado == "Recesión (rojo)"
+
+// — COT 3 semanas consecutivas —
+cot_3_semanas_reduccion = cot_sem1_reduccion and cot_sem2_reduccion and cot_sem3_reduccion
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  SCORE DE SENTIMIENTO
+// ───────────────────────────────────────────────────────────────────────────
+//
+//  COT netos largos aumentando       → +2 (BUY)
+//  Retail >70% largo (contrarian)    → +2 (SELL)
+//  Fear & Greed Extreme Fear         → +2 (BUY)
+//  DXY bajando >0.5% en sesión       → +1 (BUY)
+//  US10Y cayendo                     → +1 (BUY)
+//  Koncorde Acumulación (verde)      → +2 (BUY)
+//  Koncorde Trampa (naranja)         → +2 (SELL)
+//  Koncorde Recesión (rojo)          → -1 (cautela)
+//  Riesgo geopolítico activo         → +1 (BUY)
+
+score_buy  = (cot_alcista        ? 2 : 0)
+           + (fg_extreme_fear    ? 2 : 0)
+           + (dxy_bajando_fuerte ? 1 : 0)
+           + (us10y_cayendo      ? 1 : 0)
+           + (konc_verde         ? 2 : 0)
+           + (geo_riesgo_activo  ? 1 : 0)
+
+score_sell = (contrarian_bajista ? 2 : 0)
+           + (konc_naranja       ? 2 : 0)
+           + (fg_extreme_greed   ? 2 : 0)
+           + (cot_bajista        ? 2 : 0)
+           + (etf_bajista        ? 1 : 0)
+
+score_cautela = (konc_rojo ? -1 : 0)
+
+score_total_buy  = score_buy  + score_cautela
+score_total_sell = score_sell + score_cautela
+
+// Señal dominante
+score_neto = score_total_buy - score_total_sell
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  FILTROS ADICIONALES DE SENTIMIENTO
+// ───────────────────────────────────────────────────────────────────────────
+
+// Filtros que bloquean BUY
+filtro_no_buy = dxy_subiendo_fuerte
+              or cot_3_semanas_reduccion
+              or retail_pct_long > 80.0
+
+// Filtros que bloquean SELL
+filtro_no_sell = geo_riesgo_activo
+               or fear_greed_index < 20.0
+               or konc_verde
+
+// Señal final ajustada
+señal_buy  = score_neto >=  6 and not filtro_no_buy
+señal_buy_media  = score_neto >= 3 and score_neto < 6 and not filtro_no_buy
+señal_sell = score_neto <= -6 and not filtro_no_sell
+señal_sell_media = score_neto <= -3 and score_neto > -6 and not filtro_no_sell
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  VISUALIZACIÓN – PANEL DE PUNTUACIÓN
+// ───────────────────────────────────────────────────────────────────────────
+
+// Gráfica del score neto
+hline(6,   "Señal Fuerte BUY",  color = color.new(color.green,  30), linestyle = hline.style_dashed, linewidth = 1)
+hline(3,   "Señal Media BUY",   color = color.new(color.green,  60), linestyle = hline.style_dotted, linewidth = 1)
+hline(0,   "Neutral",           color = color.new(color.gray,   50), linestyle = hline.style_solid,  linewidth = 1)
+hline(-3,  "Señal Media SELL",  color = color.new(color.red,    60), linestyle = hline.style_dotted, linewidth = 1)
+hline(-6,  "Señal Fuerte SELL", color = color.new(color.red,    30), linestyle = hline.style_dashed, linewidth = 1)
+
+// Color de la barra del score
+score_color =
+     señal_buy        ? color.new(color.green,  0)  :
+     señal_buy_media  ? color.new(color.green, 50)  :
+     señal_sell       ? color.new(color.red,    0)  :
+     señal_sell_media ? color.new(color.red,   50)  :
+     color.new(color.gray, 50)
+
+plot(score_neto,
+     title = "Score Neto de Sentimiento",
+     color = score_color,
+     style = plot.style_columns,
+     linewidth = 2)
+
+plot(score_total_buy,
+     title = "Score BUY",
+     color = color.new(color.green, 30),
+     style = plot.style_line,
+     linewidth = 1)
+
+plot(-score_total_sell,
+     title = "Score SELL (negativo)",
+     color = color.new(color.red, 30),
+     style = plot.style_line,
+     linewidth = 1)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  VISUALIZACIÓN – TABLA DE ESTADO EN TIEMPO REAL
+// ───────────────────────────────────────────────────────────────────────────
+
+var table sentiment_table = table.new(
+     position   = position.top_right,
+     columns    = 3,
+     rows       = 22,
+     bgcolor    = color.new(color.black, 10),
+     border_width = 1,
+     border_color = color.new(color.gray, 50))
+
+// Helper para color de celda según bool
+f_color_bool(cond, col_true, col_false) =>
+    cond ? col_true : col_false
+
+if barstate.islast
+    // ── Cabecera ──────────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 0, "FUENTE",          text_color = color.white,  bgcolor = color.new(color.navy,  20), text_size = size.small)
+    table.cell(sentiment_table, 1, 0, "ESTADO",          text_color = color.white,  bgcolor = color.new(color.navy,  20), text_size = size.small)
+    table.cell(sentiment_table, 2, 0, "PUNTOS",          text_color = color.white,  bgcolor = color.new(color.navy,  20), text_size = size.small)
+
+    // ── Fila 1: COT ───────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 1, "COT (Non-Comm.)", text_color = color.silver, text_size = size.small)
+    cot_txt   = cot_alcista ? "▲ ALCISTA" : cot_bajista ? "▼ BAJISTA" : "— Neutral"
+    cot_col   = cot_alcista ? color.green  : cot_bajista ? color.red   : color.gray
+    cot_pts   = cot_alcista ? "+2 BUY"    : cot_bajista ? "+2 SELL"   : "0"
+    table.cell(sentiment_table, 1, 1, cot_txt, text_color = cot_col,  text_size = size.small)
+    table.cell(sentiment_table, 2, 1, cot_pts, text_color = cot_col,  text_size = size.small)
+
+    // ── Fila 2: ETF ───────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 2, "ETF Oro (GLD/IAU)", text_color = color.silver, text_size = size.small)
+    etf_txt = etf_alcista ? "▲ Entrada flujo" : etf_bajista ? "▼ Salida flujo" : "— Sin cambio"
+    etf_col = etf_alcista ? color.green : etf_bajista ? color.red : color.gray
+    table.cell(sentiment_table, 1, 2, etf_txt, text_color = etf_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 2, etf_alcista ? "+1 BUY" : etf_bajista ? "+1 SELL" : "0", text_color = etf_col, text_size = size.small)
+
+    // ── Fila 3: Retail ────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 3, "Retail Long/Short", text_color = color.silver, text_size = size.small)
+    ret_txt = contrarian_bajista ? "⚠ >70% LARGO → SELL" :
+              contrarian_alcista ? "⚠ >70% CORTO → BUY"  :
+              str.tostring(retail_pct_long, "#.#") + "% L / " + str.tostring(retail_pct_short, "#.#") + "% S"
+    ret_col = contrarian_bajista ? color.orange :
+              contrarian_alcista ? color.aqua   : color.gray
+    ret_pts = contrarian_bajista ? "+2 SELL" :
+              contrarian_alcista ? "+2 BUY"  : "0"
+    table.cell(sentiment_table, 1, 3, ret_txt, text_color = ret_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 3, ret_pts, text_color = ret_col, text_size = size.small)
+
+    // ── Fila 4: Fear & Greed ──────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 4, "Fear & Greed", text_color = color.silver, text_size = size.small)
+    fg_txt = fg_extreme_fear  ? "😱 Extreme Fear (" + str.tostring(fear_greed_index, "#") + ")" :
+             fg_extreme_greed ? "🤑 Extreme Greed (" + str.tostring(fear_greed_index, "#") + ")" :
+             fg_neutral       ? "😐 Neutral (" + str.tostring(fear_greed_index, "#") + ")"      :
+             str.tostring(fear_greed_index, "#")
+    fg_col = fg_extreme_fear  ? color.green  :
+             fg_extreme_greed ? color.red    :
+             fg_neutral       ? color.orange : color.gray
+    fg_pts = fg_extreme_fear  ? "+2 BUY"  :
+             fg_extreme_greed ? "+2 SELL" : "0"
+    table.cell(sentiment_table, 1, 4, fg_txt, text_color = fg_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 4, fg_pts, text_color = fg_col, text_size = size.small)
+
+    // ── Fila 5: DXY ───────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 5, "DXY Sesión", text_color = color.silver, text_size = size.small)
+    dxy_txt = dxy_bajando_fuerte  ? "▼ Cayendo " + str.tostring(dxy_cambio_pct, "#.##") + "%" :
+              dxy_subiendo_fuerte ? "▲ FUERTE +"  + str.tostring(dxy_cambio_pct, "#.##") + "% ⛔BUY" :
+              str.tostring(dxy_cambio_pct, "#.##") + "%"
+    dxy_col = dxy_bajando_fuerte ? color.green : dxy_subiendo_fuerte ? color.red : color.gray
+    dxy_pts = dxy_bajando_fuerte ? "+1 BUY" : dxy_subiendo_fuerte ? "FILTRO" : "0"
+    table.cell(sentiment_table, 1, 5, dxy_txt, text_color = dxy_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 5, dxy_pts, text_color = dxy_col, text_size = size.small)
+
+    // ── Fila 6: US10Y ─────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 6, "US10Y Yield", text_color = color.silver, text_size = size.small)
+    y10_txt = us10y_cayendo ? "▼ Cayendo → ORO +" :
+              us10y_umbral  ? "⚠ >" + str.tostring(us10y_actual, "#.##") + "% umbral" :
+              "▲ Subiendo → ORO -"
+    y10_col = us10y_cayendo ? color.green : us10y_umbral ? color.orange : color.red
+    y10_pts = us10y_cayendo ? "+1 BUY" : "0"
+    table.cell(sentiment_table, 1, 6, y10_txt, text_color = y10_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 6, y10_pts, text_color = y10_col, text_size = size.small)
+
+    // ── Fila 7: Geopolítico ───────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 7, "Riesgo Geopolítico", text_color = color.silver, text_size = size.small)
+    geo_txt = geo_riesgo_activo ? "🔥 ACTIVO → SESGO ALCISTA" : "✅ Sin tensión"
+    geo_col = geo_riesgo_activo ? color.orange : color.gray
+    geo_pts = geo_riesgo_activo ? "+1 BUY / ⛔SELL" : "0"
+    table.cell(sentiment_table, 1, 7, geo_txt, text_color = geo_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 7, geo_pts, text_color = geo_col, text_size = size.small)
+
+    // ── Fila 8: Koncorde ──────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 8, "Koncorde (" + koncorde_modo + ")", text_color = color.silver, text_size = size.small)
+    konc_col = konc_verde   ? color.green  :
+               konc_naranja ? color.orange :
+               konc_rojo    ? color.red    : color.gray
+    konc_pts_txt = konc_verde   ? "+2 BUY"     :
+                   konc_naranja ? "+2 SELL"    :
+                   konc_rojo    ? "-1 CAUTELA" : "0"
+    table.cell(sentiment_table, 1, 8, koncorde_estado, text_color = konc_col, text_size = size.small)
+    table.cell(sentiment_table, 2, 8, konc_pts_txt,    text_color = konc_col, text_size = size.small)
+
+    // ── Separador ─────────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 9, "────────────────", text_color = color.gray,  text_size = size.small)
+    table.cell(sentiment_table, 1, 9, "────────────",     text_color = color.gray,  text_size = size.small)
+    table.cell(sentiment_table, 2, 9, "────────",         text_color = color.gray,  text_size = size.small)
+
+    // ── Score resumen ─────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 10, "Score BUY  (bruto)", text_color = color.green,  text_size = size.small)
+    table.cell(sentiment_table, 1, 10, str.tostring(score_buy), text_color = color.green,  text_size = size.small)
+    table.cell(sentiment_table, 2, 10, "", text_size = size.small)
+
+    table.cell(sentiment_table, 0, 11, "Score SELL (bruto)", text_color = color.red,    text_size = size.small)
+    table.cell(sentiment_table, 1, 11, str.tostring(score_sell), text_color = color.red,    text_size = size.small)
+    table.cell(sentiment_table, 2, 11, "", text_size = size.small)
+
+    table.cell(sentiment_table, 0, 12, "Cautela (Koncorde rojo)", text_color = color.orange, text_size = size.small)
+    table.cell(sentiment_table, 1, 12, str.tostring(score_cautela), text_color = color.orange, text_size = size.small)
+    table.cell(sentiment_table, 2, 12, "", text_size = size.small)
+
+    table.cell(sentiment_table, 0, 13, "▶ SCORE NETO",  text_color = color.white, bgcolor = color.new(color.navy, 20), text_size = size.normal)
+    score_neto_col = score_neto >= 6  ? color.green  :
+                     score_neto >= 3  ? color.lime   :
+                     score_neto <= -6 ? color.red    :
+                     score_neto <= -3 ? color.orange : color.gray
+    table.cell(sentiment_table, 1, 13, str.tostring(score_neto) + " pts",
+               text_color = score_neto_col, bgcolor = color.new(color.navy, 20), text_size = size.normal)
+    table.cell(sentiment_table, 2, 13, "", text_size = size.small)
+
+    // ── Filtros activos ───────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 14, "Filtro BUY bloqueado",  text_color = color.silver, text_size = size.small)
+    table.cell(sentiment_table, 1, 14, filtro_no_buy ? "⛔ SÍ" : "✅ Libre",
+               text_color = filtro_no_buy ? color.red : color.green, text_size = size.small)
+    table.cell(sentiment_table, 2, 14, "", text_size = size.small)
+
+    table.cell(sentiment_table, 0, 15, "Filtro SELL bloqueado", text_color = color.silver, text_size = size.small)
+    table.cell(sentiment_table, 1, 15, filtro_no_sell ? "⛔ SÍ" : "✅ Libre",
+               text_color = filtro_no_sell ? color.red : color.green, text_size = size.small)
+    table.cell(sentiment_table, 2, 15, "", text_size = size.small)
+
+    // ── Señal final ───────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 16, "═══ SEÑAL FINAL ═══", text_color = color.white,
+               bgcolor = color.new(color.navy, 0), text_size = size.normal)
+    table.cell(sentiment_table, 1, 16, "", text_size = size.small)
+    table.cell(sentiment_table, 2, 16, "", text_size = size.small)
+
+    señal_txt = señal_buy       ? "🟢 BUY FUERTE  (≥+6)"  :
+                señal_buy_media ? "🟩 BUY MEDIO   (+3/+5)" :
+                señal_sell      ? "🔴 SELL FUERTE (≥+6)"   :
+                señal_sell_media? "🟥 SELL MEDIO  (+3/+5)" :
+                "⬜ NO OPERAR    (<+3)"
+    señal_col = señal_buy or señal_buy_media   ? color.green  :
+                señal_sell or señal_sell_media ? color.red    : color.gray
+    table.cell(sentiment_table, 0, 17, señal_txt, text_color = señal_col,
+               bgcolor = color.new(color.black, 30), text_size = size.large,
+               merge_cells_to_col = 2)
+
+    // ── Ajuste de tamaño por contexto ─────────────────────────────────────
+    table.cell(sentiment_table, 0, 18, "Ajuste de posición:", text_color = color.silver, text_size = size.small)
+    ajuste_txt = konc_rojo     ? "⚠ Reducir 50% · solo RR≥1:3" :
+                 konc_verde    ? "📈 Aumentar +25% (smart money)" :
+                 fg_neutral    ? "📉 Reducir 50% (F&G neutro)"   :
+                 us10y_umbral  ? "⚠ Reducir BUY (US10Y >4.80%)" :
+                 "✅ Tamaño normal"
+    ajuste_col = konc_rojo ? color.red : konc_verde ? color.green :
+                 fg_neutral or us10y_umbral ? color.orange : color.white
+    table.cell(sentiment_table, 1, 18, ajuste_txt, text_color = ajuste_col,
+               text_size = size.small, merge_cells_to_col = 2)
+
+    // ── Correlación DXY estimada ──────────────────────────────────────────
+    dxy_impacto_est = dxy_cambio_pct * -0.65   // coef. medio -0.5/-0.8
+    table.cell(sentiment_table, 0, 19, "DXY → XAUUSD est.:", text_color = color.silver, text_size = size.small)
+    table.cell(sentiment_table, 1, 19,
+               (dxy_impacto_est >= 0 ? "+" : "") + str.tostring(dxy_impacto_est, "#.##") + "%",
+               text_color = dxy_impacto_est >= 0 ? color.green : color.red, text_size = size.small)
+    table.cell(sentiment_table, 2, 19, "(coef. -0.65)", text_color = color.gray, text_size = size.small)
+
+    // ── RSI / Vol proxy ───────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 20, "Proxy RSI | Vol/MA:", text_color = color.silver, text_size = size.small)
+    table.cell(sentiment_table, 1, 20,
+               str.tostring(rsi_val, "#.#") + " | " + str.tostring(vol_ratio, "#.##") + "x",
+               text_color = color.white, text_size = size.small)
+    table.cell(sentiment_table, 2, 20, koncorde_proxy_estado, text_color = color.white, text_size = size.small)
+
+    // ── COT variación ─────────────────────────────────────────────────────
+    table.cell(sentiment_table, 0, 21, "COT Δ s/s:", text_color = color.silver, text_size = size.small)
+    table.cell(sentiment_table, 1, 21,
+               (cot_cambio_pct >= 0 ? "+" : "") + str.tostring(cot_cambio_pct, "#.##") + "%",
+               text_color = cot_cambio_pct > 10 ? color.green : cot_cambio_pct < -15 ? color.red : color.gray,
+               text_size = size.small)
+    table.cell(sentiment_table, 2, 21,
+               cot_3_semanas_reduccion ? "⛔ 3 sem. bajan" : "— OK",
+               text_color = cot_3_semanas_reduccion ? color.red : color.gray,
+               text_size = size.small)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ░░  ALERTAS
+// ───────────────────────────────────────────────────────────────────────────
+
+alertcondition(señal_buy,        title = "🟢 BUY FUERTE  (Score ≥ +6)",  message = "SENTIMENT XAUUSD – Señal BUY FUERTE. Score neto ≥ +6. Verificar nivel técnico.")
+alertcondition(señal_buy_media,  title = "🟩 BUY MEDIO   (Score +3/+5)", message = "SENTIMENT XAUUSD – Señal BUY MEDIA. Score +3/+5. Reducir tamaño si F&G neutro.")
+alertcondition(señal_sell,       title = "🔴 SELL FUERTE (Score ≤ -6)",  message = "SENTIMENT XAUUSD – Señal SELL FUERTE. Score neto ≤ -6. Verificar nivel técnico.")
+alertcondition(señal_sell_media, title = "🟥 SELL MEDIO  (Score -3/-5)", message = "SENTIMENT XAUUSD – Señal SELL MEDIA. Score -3/-5. Buscar resistencia técnica.")
+alertcondition(filtro_no_buy,    title = "⛔ Filtro BUY activado",        message = "SENTIMENT XAUUSD – Filtro BUY activo: DXY fuerte / COT 3sem. bajando / Retail >80% L.")
+alertcondition(filtro_no_sell,   title = "⛔ Filtro SELL activado",       message = "SENTIMENT XAUUSD – Filtro SELL activo: Geopolítica / F&G Extreme Fear / Koncorde verde.")
