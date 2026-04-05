@@ -389,8 +389,8 @@ if barstate.islast
 
     señal_txt = señal_buy       ? "🟢 BUY FUERTE  (≥+6)"  :
                 señal_buy_media ? "🟩 BUY MEDIO   (+3/+5)" :
-                señal_sell      ? "🔴 SELL FUERTE (≥+6)"   :
-                señal_sell_media? "🟥 SELL MEDIO  (+3/+5)" :
+                señal_sell      ? "🔴 SELL FUERTE (≤-6)"   :
+                señal_sell_media? "🟥 SELL MEDIO  (-3/-5)" :
                 "⬜ NO OPERAR    (<+3)"
     señal_col = señal_buy or señal_buy_media   ? color.green  :
                 señal_sell or señal_sell_media ? color.red    : color.gray
